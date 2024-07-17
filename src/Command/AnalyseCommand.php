@@ -13,10 +13,10 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
 #[AsCommand(
-    name: 'doctrine-relations-analyser',
+    name: 'doctrine-relations-analyser:analyse',
     description: 'Command to visualise easily the relationships between entities',
 )]
-class AnalyserCommand extends Command
+class AnalyseCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager
