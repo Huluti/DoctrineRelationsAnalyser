@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace DoctrineRelationsAnalyserBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Fhaculty\Graph\Graph;
+use Graphp\Graph\Graph;
 use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -98,11 +98,14 @@ class AnalyseCommand extends Command
     private function generateGraph(array $relationships, string $outputPath, SymfonyStyle $io): void
     {
         $graph = new Graph();
+        $graph->setAttribute('graphviz.graph.rankdir', 'LR');
 
         // Create nodes for entities
         $nodes = [];
         foreach (array_keys($relationships) as $entity) {
-            $nodes[$entity] = $graph->createVertex($entity);
+            $vertex = $graph->createVertex();
+            $vertex->setAttribute('id', $entity);
+            $nodes[$entity] = $vertex;
         }
 
         // Create edges for relationships
@@ -110,20 +113,23 @@ class AnalyseCommand extends Command
             foreach ($relations as $relation) {
                 $targetEntity = $relation['targetEntity'];
                 if (isset($nodes[$targetEntity])) {
-                    $edge = $nodes[$entity]->createEdgeTo($nodes[$targetEntity]);
-                    $edge->setAttribute('label', $relation['field']);
-                    $edge->setAttribute('type', $this->getRelationType($relation['type']));
+                    $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                    $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
                 }
             }
         }
 
         $graphviz = new GraphViz();
         $graphviz->setFormat('png');
+
         $imageData = $graphviz->createImageData($graph);
 
-        file_put_contents($outputPath, $imageData);
-
-        $io->success("Graphviz image generated at: $outputPath");
+        $fullPath = $outputPath . '/graph.png';
+        if (file_put_contents($fullPath, $imageData)) {
+            $io->success("Graphviz image generated at: $fullPath");
+        } else {
+            $io->error('Graphviz image generation has failed');
+        }
     }
 
     private function getRelationType(int $type): string
