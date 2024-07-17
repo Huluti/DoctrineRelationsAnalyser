@@ -6,14 +6,14 @@
 
 ## Overview
 
-Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade relationships within Doctrine ORM entities in PHP projects. It helps developers understand how deletion operations propagate through related entities and assists in identifying potential issues or optimizations in data management strategies.
+Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade relationships within Doctrine ORM entities in Symfony projects. It helps developers understand how deletion operations propagate through related entities and assists in identifying potential issues or optimizations in data management strategies.
 
 ### Why is it important?
 
 Managing cascade operations, especially deletions, is crucial to avoid unintentional data loss. This tool provides a human-readable summary to help developers review and understand these relationships, ensuring they are intentional and correctly implemented. This helps in identifying and mitigating risks associated with cascade deletions.
 
 > [!NOTE]  
-> This project is a work in progress. It currently focuses on analyzing deletion operations within Doctrine ORM entities. Contributions and feedback are welcome.
+> This project is a work in progress. Contributions and feedback are welcome.
 
 ## Compatibility
 
