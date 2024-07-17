@@ -22,9 +22,10 @@
     },
     "require": {
         "php": ">=8.0",
-        "symfony/console": "^7.0",
-        "symfony/http-kernel": "^7.0",
-        "doctrine/orm": "^3.0"
+        "symfony/console": "^7.1",
+        "symfony/http-kernel": "^7.1",
+        "doctrine/orm": "^3.0",
+        "symfony/dependency-injection": "^7.1"
     },
     "suggest": {
         "graphp/graphviz": "To generate graphviz graphs"
