@@ -6,9 +6,9 @@ namespace DoctrineRelationsAnalyserBundle;
 
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigurator;
-use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Symfony\Component\HttpKernel\Bundle\AbstractBundle;
 
-class DoctrineRelationsAnalyserBundle extends Bundle
+class DoctrineRelationsAnalyserBundle extends AbstractBundle
 {
     public function getPath(): string
     {
