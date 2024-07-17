@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace DoctrineRelationsAnalyserBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Fhaculty\Graph\Graph;
+use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -20,47 +22,50 @@ class AnalyseCommand extends Command
 {
     public function __construct(
         private readonly EntityManagerInterface $entityManager
-    )
-    {
+    ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this
-            ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Path to output DOT file for graph visualization')
+            ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
+            ->addOption('generate-graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
-        
+
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
         $relationships = [];
 
         foreach ($metaData as $meta) {
             $className = $meta->getName();
             foreach ($meta->associationMappings as $fieldName => $association) {
-                //if (isset($association['onDelete']) || isset($association['orphanRemoval']) || (isset($association['cascade']) && in_array('remove', $association['cascade']))) {
-                    $relationDetails = [
-                        'field' => $fieldName,
-                        'targetEntity' => $association['targetEntity'],
-                        'type' => $association['type'],
-                        // 'onDelete' => $association['onDelete'] ?? null,
-                        // 'orphanRemoval' => $association['orphanRemoval'] ?? null,
-                        // 'cascade' => $association['cascade'] ?? null,
-                    ];
-                    $relationships[$className][] = $relationDetails;
-                //}
+                // if (isset($association['onDelete']) || isset($association['orphanRemoval']) || (isset($association['cascade']) && in_array('remove', $association['cascade']))) {
+                $relationDetails = [
+                    'field' => $fieldName,
+                    'targetEntity' => $association['targetEntity'],
+                    'type' => $association['type'],
+                    // 'onDelete' => $association['onDelete'] ?? null,
+                    // 'orphanRemoval' => $association['orphanRemoval'] ?? null,
+                    // 'cascade' => $association['cascade'] ?? null,
+                ];
+                $relationships[$className][] = $relationDetails;
+                // }
             }
         }
 
         $this->outputRelationships($relationships, $io);
 
         $outputPath = $input->getOption('output');
-        if ($outputPath) {
-            $this->generateGraph($relationships, $outputPath, $io);
+
+        if ($input->getOption('generate-graph')) {
+            if ($outputPath) {
+                $this->generateGraph($relationships, $outputPath, $io);
+            }
         }
 
         $io->success('Relationship analysis completed.');
@@ -75,7 +80,7 @@ class AnalyseCommand extends Command
             foreach ($relations as $relation) {
                 $io->text("Field: {$relation['field']}");
                 $io->text("Target Entity: {$relation['targetEntity']}");
-                $io->text("Type: " . $this->getRelationType($relation['type']));
+                $io->text('Type: ' . $this->getRelationType($relation['type']));
                 // if ($relation['onDelete']) {
                 //     $io->text("On Delete: {$relation['onDelete']}");
                 // }
@@ -92,24 +97,38 @@ class AnalyseCommand extends Command
 
     private function generateGraph(array $relationships, string $outputPath, SymfonyStyle $io): void
     {
-        $dot = "digraph G {\n";
+        $graph = new Graph();
+
+        // Create nodes for entities
+        $nodes = [];
+        foreach (array_keys($relationships) as $entity) {
+            $nodes[$entity] = $graph->createVertex($entity);
+        }
+
+        // Create edges for relationships
         foreach ($relationships as $entity => $relations) {
             foreach ($relations as $relation) {
-                $dot .= "    \"$entity\" -> \"{$relation['targetEntity']}\" [label=\"{$relation['field']} ({$this->getRelationType($relation['type'])})\"];\n";
+                $targetEntity = $relation['targetEntity'];
+                if (isset($nodes[$targetEntity])) {
+                    $edge = $nodes[$entity]->createEdgeTo($nodes[$targetEntity]);
+                    $edge->setAttribute('label', $relation['field']);
+                    $edge->setAttribute('type', $this->getRelationType($relation['type']));
+                }
             }
         }
-        $dot .= "}\n";
 
-        if (file_put_contents($outputPath, $dot) !== false) {
-            $io->success("Graphviz DOT file generated at $outputPath");
-        } else {
-            $io->error("Failed to write Graphviz DOT file to $outputPath");
-        }
+        $graphviz = new GraphViz();
+        $graphviz->setFormat('png');
+        $imageData = $graphviz->createImageData($graph);
+
+        file_put_contents($outputPath, $imageData);
+
+        $io->success("Graphviz image generated at: $outputPath");
     }
 
     private function getRelationType(int $type): string
     {
-        return match($type) {
+        return match ($type) {
             \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_ONE => 'OneToOne',
             \Doctrine\ORM\Mapping\ClassMetadata::MANY_TO_ONE => 'ManyToOne',
             \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_MANY => 'OneToMany',
@@ -117,5 +136,4 @@ class AnalyseCommand extends Command
             default => 'Unknown',
         };
     }
-
 }
