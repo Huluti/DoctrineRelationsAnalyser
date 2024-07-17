@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace DoctrineRelationsAnalyserBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use DoctrineRelationsAnalyserBundle\Enum\AnalysisMode;
 use Graphp\Graph\Graph;
 use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -15,6 +16,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
 use Symfony\Component\Filesystem\Filesystem;
+use ValueError;
 
 #[AsCommand(
     name: 'doctrine-relations-analyser:analyse',
@@ -32,6 +34,7 @@ class AnalyseCommand extends Command
     protected function configure(): void
     {
         $this
+            ->addOption('mode', null, InputOption::VALUE_OPTIONAL, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, AnalysisMode::cases())
             ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
             ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
         ;
@@ -43,27 +46,51 @@ class AnalyseCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
+        try {
+            $mode = AnalysisMode::from($input->getOption('mode'));
+        } catch (ValueError $e) {
+            $io->error('Invalid mode. Allowed values are: all, deletions.');
+
+            return Command::FAILURE;
+        }
+
+        $io->section('Analysis mode: ' . $mode->value);
+
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
         $relationships = [];
 
         foreach ($metaData as $meta) {
             $className = $meta->getName();
             foreach ($meta->associationMappings as $fieldName => $association) {
-                // if (isset($association['onDelete']) || isset($association['orphanRemoval']) || (isset($association['cascade']) && in_array('remove', $association['cascade']))) {
                 $relationDetails = [
                     'field' => $fieldName,
                     'targetEntity' => $association['targetEntity'],
                     'type' => $association['type'],
-                    // 'onDelete' => $association['onDelete'] ?? null,
-                    // 'orphanRemoval' => $association['orphanRemoval'] ?? null,
-                    // 'cascade' => $association['cascade'] ?? null,
                 ];
+
+                if (AnalysisMode::DELETIONS === $mode) {
+                    $relationDetails['deletions'] = [
+                        'onDelete' => $association['onDelete'] ?? false,
+                    ];
+
+                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
+                        $relationDetails['deletions']['orphanRemoval'] = true;
+                    } else {
+                        $relationDetails['deletions']['orphanRemoval'] = false;
+                    }
+
+                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
+                        $relationDetails['deletions']['cascade'] = true;
+                    } else {
+                        $relationDetails['deletions']['cascade'] = false;
+                    }
+                }
+
                 $relationships[$className][] = $relationDetails;
-                // }
             }
         }
 
-        $this->outputRelationships($relationships, $io);
+        $this->outputRelationships($relationships, $io, $mode);
 
         $outputPath = $input->getOption('output');
         $outputPath = ltrim($outputPath, '/');
@@ -81,7 +108,7 @@ class AnalyseCommand extends Command
 
         if ($input->getOption('graph')) {
             if ($outputPath) {
-                if ($this->generateGraph($relationships, $outputPath)) {
+                if ($this->generateGraph($relationships, $outputPath, $mode)) {
                     $io->success("Graph image generated in: $outputPath");
                 } else {
                     $io->error("Can't save graph image");
@@ -103,7 +130,7 @@ class AnalyseCommand extends Command
         return Command::SUCCESS;
     }
 
-    private function outputRelationships(array $relationships, SymfonyStyle $io): void
+    private function outputRelationships(array $relationships, SymfonyStyle $io, AnalysisMode $mode): void
     {
         foreach ($relationships as $entity => $relations) {
             $io->section("Entity: $entity");
@@ -111,21 +138,26 @@ class AnalyseCommand extends Command
                 $io->text("Field: {$relation['field']}");
                 $io->text("Target Entity: {$relation['targetEntity']}");
                 $io->text('Type: ' . $this->getRelationType($relation['type']));
-                // if ($relation['onDelete']) {
-                //     $io->text("On Delete: {$relation['onDelete']}");
-                // }
-                // if ($relation['orphanRemoval']) {
-                //     $io->text("Orphan Removal: " . ($relation['orphanRemoval'] ? 'true' : 'false'));
-                // }
-                // if ($relation['cascade']) {
-                //     $io->text("Cascade: " . implode(', ', $relation['cascade']));
-                // }
+
+                if (AnalysisMode::DELETIONS === $mode) {
+                    $io->text('Deletions properties:');
+                    if ($relation['deletions']['onDelete']) {
+                        $io->text("- onDelete: {$relation['onDelete']}");
+                    }
+                    if ($relation['deletions']) {
+                        $io->text('- orphanRemoval: true');
+                    }
+                    if ($relation['deletions']) {
+                        $io->text("- cascade: ['remove']");
+                    }
+                }
+
                 $io->newLine();
             }
         }
     }
 
-    private function generateGraph(array $relationships, string $outputPath): bool
+    private function generateGraph(array $relationships, string $outputPath, AnalysisMode $mode): bool
     {
         $graph = new Graph();
         $graph->setAttribute('graphviz.graph.rankdir', 'LR');
@@ -143,19 +175,34 @@ class AnalyseCommand extends Command
             foreach ($relations as $relation) {
                 $targetEntity = $relation['targetEntity'];
                 if (isset($nodes[$targetEntity])) {
-                    $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
-                    $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
+                    if (AnalysisMode::ALL === $mode) {
+                        $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                        $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
+                    } elseif (AnalysisMode::DELETIONS === $mode) {
+                        foreach ($relation['deletions'] as $key => $value) {
+                            if ('onDelete' === $key) {
+                                $label = "onDelete: {$relation['onDelete']}";
+                            } elseif ('orphanRemoval' === $key) {
+                                $label = 'orphanRemoval: true';
+                            } elseif ('cascade' === $key) {
+                                $label = "cascade: ['remove']";
+                            }
+                            if (isset($label)) {
+                                $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                $edge->setAttribute('graphviz.label', $label);
+                            }
+                        }
+                    }
                 }
             }
         }
 
+        $format = 'png';
         $graphviz = new GraphViz();
-        $graphviz->setFormat('png');
-
+        $graphviz->setFormat($format);
         $imageData = $graphviz->createImageData($graph);
 
-        $fullPath = $outputPath . '/graph.png';
-
+        $fullPath = $outputPath . '/' . $mode->value . $format;
         try {
             $this->filesystem->dumpFile($fullPath, $imageData);
         } catch (IOExceptionInterface) {
