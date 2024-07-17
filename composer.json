@@ -1,0 +1,32 @@
+{
+    "name": "huluti/doctrine-relations-analyser",
+    "description": "A Symfony bundle that provide tools to analyze Doctrine relations",
+    "license": "GPL-3.0-or-later",
+    "keywords": [
+        "bundle",
+        "symfony",
+        "doctrine",
+        "relations"
+    ],
+    "type": "symfony-bundle",
+    "authors": [
+        {
+            "name": "Hugo Posnic",
+            "email": "hugo.posnic@protonmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "DoctrineRelationsAnalyserBundle\\": "src/"
+        }
+    },
+    "require": {
+        "php": ">=8.0",
+        "symfony/console": "^7.0",
+        "symfony/http-kernel": "^7.0",
+        "doctrine/orm": "^3.0"
+    },
+    "suggest": {
+        "graphp/graphviz": "To generate graphviz graphs"
+    }
+}
