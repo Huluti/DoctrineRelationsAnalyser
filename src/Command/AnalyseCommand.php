@@ -13,6 +13,8 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
 
 #[AsCommand(
     name: 'doctrine-relations-analyser:analyse',
@@ -21,7 +23,8 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class AnalyseCommand extends Command
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
+        private readonly EntityManagerInterface $entityManager,
+        private readonly Filesystem $filesystem
     ) {
         parent::__construct();
     }
@@ -36,6 +39,8 @@ class AnalyseCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $start = microtime(true);
+
         $io = new SymfonyStyle($input, $output);
 
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
@@ -61,14 +66,39 @@ class AnalyseCommand extends Command
         $this->outputRelationships($relationships, $io);
 
         $outputPath = $input->getOption('output');
+        $outputPath = ltrim($outputPath, '/');
+
+        try {
+            // Ensure $outputPath exists, create it if it doesn't
+            if (!$this->filesystem->exists($outputPath)) {
+                $this->filesystem->mkdir($outputPath);
+            }
+        } catch (IOExceptionInterface $e) {
+            $io->error("Can't create folder: " . $e->getMessage());
+
+            return Command::FAILURE;
+        }
 
         if ($input->getOption('graph')) {
             if ($outputPath) {
-                $this->generateGraph($relationships, $outputPath, $io);
+                if ($this->generateGraph($relationships, $outputPath)) {
+                    $io->success("Graph image generated in: $outputPath");
+                } else {
+                    $io->error("Can't save graph image");
+
+                    return Command::FAILURE;
+                }
+            } else {
+                $io->error('Graph option requires setting output folder');
+
+                return Command::FAILURE;
             }
         }
 
-        $io->success('Relationship analysis completed.');
+        $end = microtime(true);
+        $elapsed = round($end - $start, 3);
+
+        $io->success("Relationship analysis completed in $elapsed seconds.");
 
         return Command::SUCCESS;
     }
@@ -95,7 +125,7 @@ class AnalyseCommand extends Command
         }
     }
 
-    private function generateGraph(array $relationships, string $outputPath, SymfonyStyle $io): void
+    private function generateGraph(array $relationships, string $outputPath): bool
     {
         $graph = new Graph();
         $graph->setAttribute('graphviz.graph.rankdir', 'LR');
@@ -125,11 +155,14 @@ class AnalyseCommand extends Command
         $imageData = $graphviz->createImageData($graph);
 
         $fullPath = $outputPath . '/graph.png';
-        if (file_put_contents($fullPath, $imageData)) {
-            $io->success("Graphviz image generated at: $fullPath");
-        } else {
-            $io->error('Graphviz image generation has failed');
+
+        try {
+            $this->filesystem->dumpFile($fullPath, $imageData);
+        } catch (IOExceptionInterface) {
+            return false;
         }
+
+        return true;
     }
 
     private function getRelationType(int $type): string
