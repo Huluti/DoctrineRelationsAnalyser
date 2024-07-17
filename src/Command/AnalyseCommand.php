@@ -5,12 +5,18 @@ declare(strict_types=1);
 namespace DoctrineRelationsAnalyserBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
+use DoctrineRelationsAnalyserBundle\Enum\AnalysisMode;
+use Graphp\Graph\Graph;
+use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
+use Symfony\Component\Filesystem\Exception\IOExceptionInterface;
+use Symfony\Component\Filesystem\Filesystem;
+use ValueError;
 
 #[AsCommand(
     name: 'doctrine-relations-analyser:analyse',
@@ -19,97 +25,196 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 class AnalyseCommand extends Command
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager
-    )
-    {
+        private readonly EntityManagerInterface $entityManager,
+        private readonly Filesystem $filesystem
+    ) {
         parent::__construct();
     }
 
     protected function configure(): void
     {
         $this
-            ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Path to output DOT file for graph visualization')
+            ->addOption('mode', null, InputOption::VALUE_OPTIONAL, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, AnalysisMode::cases())
+            ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
+            ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
         ;
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
+        $start = microtime(true);
+
         $io = new SymfonyStyle($input, $output);
-        
+
+        try {
+            $mode = AnalysisMode::from($input->getOption('mode'));
+        } catch (ValueError $e) {
+            $io->error('Invalid mode. Allowed values are: all, deletions.');
+
+            return Command::FAILURE;
+        }
+
+        $io->section('Analysis mode: ' . $mode->value);
+
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
         $relationships = [];
 
         foreach ($metaData as $meta) {
             $className = $meta->getName();
             foreach ($meta->associationMappings as $fieldName => $association) {
-                //if (isset($association['onDelete']) || isset($association['orphanRemoval']) || (isset($association['cascade']) && in_array('remove', $association['cascade']))) {
-                    $relationDetails = [
-                        'field' => $fieldName,
-                        'targetEntity' => $association['targetEntity'],
-                        'type' => $association['type'],
-                        // 'onDelete' => $association['onDelete'] ?? null,
-                        // 'orphanRemoval' => $association['orphanRemoval'] ?? null,
-                        // 'cascade' => $association['cascade'] ?? null,
+                $relationDetails = [
+                    'field' => $fieldName,
+                    'targetEntity' => $association['targetEntity'],
+                    'type' => $association['type'],
+                ];
+
+                if (AnalysisMode::DELETIONS === $mode) {
+                    $deletions = [
+                        'onDelete' => $association['onDelete'] ?? false,
+                        'orphanRemoval' => $association['orphanRemoval'] ?? false,
+                        'cascade' => isset($association['cascade']) && in_array('remove', $association['cascade'], true),
                     ];
-                    $relationships[$className][] = $relationDetails;
-                //}
+
+                    if (isset($association['joinColumns'])) {
+                        foreach ($association['joinColumns'] as $joinColumn) {
+                            if (isset($joinColumn['onDelete'])) {
+                                $deletions['onDelete'] = $joinColumn['onDelete'];
+                            }
+                        }
+                    }
+
+                    $relationDetails['deletions'] = $deletions;
+                }
+
+                $relationships[$className][] = $relationDetails;
             }
         }
 
-        $this->outputRelationships($relationships, $io);
+        $this->outputRelationships($relationships, $io, $mode);
 
         $outputPath = $input->getOption('output');
-        if ($outputPath) {
-            $this->generateGraph($relationships, $outputPath, $io);
+        $outputPath = ltrim($outputPath, '/');
+
+        try {
+            // Ensure $outputPath exists, create it if it doesn't
+            if (!$this->filesystem->exists($outputPath)) {
+                $this->filesystem->mkdir($outputPath);
+            }
+        } catch (IOExceptionInterface $e) {
+            $io->error("Can't create folder: " . $e->getMessage());
+
+            return Command::FAILURE;
         }
 
-        $io->success('Relationship analysis completed.');
+        if ($input->getOption('graph')) {
+            if ($outputPath) {
+                if ($this->generateGraph($relationships, $outputPath, $mode)) {
+                    $io->success("Graph image generated in: $outputPath");
+                } else {
+                    $io->error("Can't save graph image");
+
+                    return Command::FAILURE;
+                }
+            } else {
+                $io->error('Graph option requires setting output folder');
+
+                return Command::FAILURE;
+            }
+        }
+
+        $end = microtime(true);
+        $elapsed = round($end - $start, 3);
+
+        $io->success("Relationship analysis completed in $elapsed seconds.");
 
         return Command::SUCCESS;
     }
 
-    private function outputRelationships(array $relationships, SymfonyStyle $io): void
+    private function outputRelationships(array $relationships, SymfonyStyle $io, AnalysisMode $mode): void
     {
         foreach ($relationships as $entity => $relations) {
             $io->section("Entity: $entity");
             foreach ($relations as $relation) {
                 $io->text("Field: {$relation['field']}");
                 $io->text("Target Entity: {$relation['targetEntity']}");
-                $io->text("Type: " . $this->getRelationType($relation['type']));
-                // if ($relation['onDelete']) {
-                //     $io->text("On Delete: {$relation['onDelete']}");
-                // }
-                // if ($relation['orphanRemoval']) {
-                //     $io->text("Orphan Removal: " . ($relation['orphanRemoval'] ? 'true' : 'false'));
-                // }
-                // if ($relation['cascade']) {
-                //     $io->text("Cascade: " . implode(', ', $relation['cascade']));
-                // }
+                $io->text('Type: ' . $this->getRelationType($relation['type']));
+
+                if (AnalysisMode::DELETIONS === $mode) {
+                    $io->text('Deletions properties:');
+                    if (isset($relation['deletions']['onDelete'])) {
+                        $io->text("- onDelete: {$relation['deletions']['onDelete']}");
+                    }
+                    if (isset($relation['deletions']['orphanRemoval'])) {
+                        $io->text('- orphanRemoval: true');
+                    }
+                    if (isset($relation['deletions']['cascade'])) {
+                        $io->text("- cascade: ['remove']");
+                    }
+                }
+
                 $io->newLine();
             }
         }
     }
 
-    private function generateGraph(array $relationships, string $outputPath, SymfonyStyle $io): void
+    private function generateGraph(array $relationships, string $outputPath, AnalysisMode $mode): bool
     {
-        $dot = "digraph G {\n";
+        $graph = new Graph();
+        $graph->setAttribute('graphviz.graph.rankdir', 'LR');
+
+        // Create nodes for entities
+        $nodes = [];
+        foreach (array_keys($relationships) as $entity) {
+            $vertex = $graph->createVertex();
+            $vertex->setAttribute('id', $entity);
+            $nodes[$entity] = $vertex;
+        }
+
+        // Create edges for relationships
         foreach ($relationships as $entity => $relations) {
             foreach ($relations as $relation) {
-                $dot .= "    \"$entity\" -> \"{$relation['targetEntity']}\" [label=\"{$relation['field']} ({$this->getRelationType($relation['type'])})\"];\n";
+                $targetEntity = $relation['targetEntity'];
+                if (isset($nodes[$targetEntity])) {
+                    if (AnalysisMode::ALL === $mode) {
+                        $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                        $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
+                    } elseif (AnalysisMode::DELETIONS === $mode) {
+                        foreach ($relation['deletions'] as $key => $value) {
+                            if ('onDelete' === $key) {
+                                $label = "onDelete: {$value}";
+                            } elseif ('orphanRemoval' === $key) {
+                                $label = 'orphanRemoval: true';
+                            } elseif ('cascade' === $key) {
+                                $label = "cascade: ['remove']";
+                            }
+                            if (isset($label)) {
+                                $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                $edge->setAttribute('graphviz.label', $label);
+                            }
+                        }
+                    }
+                }
             }
         }
-        $dot .= "}\n";
 
-        if (file_put_contents($outputPath, $dot) !== false) {
-            $io->success("Graphviz DOT file generated at $outputPath");
-        } else {
-            $io->error("Failed to write Graphviz DOT file to $outputPath");
+        $format = 'png';
+        $graphviz = new GraphViz();
+        $graphviz->setFormat($format);
+        $imageData = $graphviz->createImageData($graph);
+
+        $fullPath = $outputPath . '/' . $mode->value . '.' . $format;
+        try {
+            $this->filesystem->dumpFile($fullPath, $imageData);
+        } catch (IOExceptionInterface) {
+            return false;
         }
+
+        return true;
     }
 
     private function getRelationType(int $type): string
     {
-        return match($type) {
+        return match ($type) {
             \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_ONE => 'OneToOne',
             \Doctrine\ORM\Mapping\ClassMetadata::MANY_TO_ONE => 'ManyToOne',
             \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_MANY => 'OneToMany',
@@ -117,5 +222,4 @@ class AnalyseCommand extends Command
             default => 'Unknown',
         };
     }
-
 }

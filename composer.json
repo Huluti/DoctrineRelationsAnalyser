@@ -25,9 +25,13 @@
         "symfony/console": "^7.1",
         "symfony/http-kernel": "^7.1",
         "doctrine/orm": "^3.0",
-        "symfony/dependency-injection": "^7.1"
+        "symfony/dependency-injection": "^7.1",
+        "graphp/graphviz": "^1@dev",
+        "graphp/graph": "^1@dev",
+        "symfony/filesystem": "^7.1"
     },
-    "suggest": {
-        "graphp/graphviz": "To generate graphviz graphs"
+    "require-dev": {
+        "friendsofphp/php-cs-fixer": "^3.59",
+        "phpstan/phpstan": "^1.11"
     }
 }
