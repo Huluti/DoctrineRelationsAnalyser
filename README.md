@@ -6,7 +6,7 @@
 
 ## Overview
 
-Doctrine Cascade Analyzer is a tool designed to analyze and visualize cascade relationships within Doctrine ORM entities in PHP projects. It helps developers understand how deletion operations propagate through related entities and assists in identifying potential issues or optimizations in data management strategies.
+Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade relationships within Doctrine ORM entities in PHP projects. It helps developers understand how deletion operations propagate through related entities and assists in identifying potential issues or optimizations in data management strategies.
 
 ### Why is it important?
 
