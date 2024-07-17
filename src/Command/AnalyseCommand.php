@@ -69,21 +69,21 @@ class AnalyseCommand extends Command
                 ];
 
                 if (AnalysisMode::DELETIONS === $mode) {
-                    $relationDetails['deletions'] = [
+                    $deletions = [
                         'onDelete' => $association['onDelete'] ?? false,
+                        'orphanRemoval' => $association['orphanRemoval'] ?? false,
+                        'cascade' => isset($association['cascade']) && in_array('remove', $association['cascade'], true),
                     ];
 
-                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
-                        $relationDetails['deletions']['orphanRemoval'] = true;
-                    } else {
-                        $relationDetails['deletions']['orphanRemoval'] = false;
+                    if (isset($association['joinColumns'])) {
+                        foreach ($association['joinColumns'] as $joinColumn) {
+                            if (isset($joinColumn['onDelete'])) {
+                                $deletions['onDelete'] = $joinColumn['onDelete'];
+                            }
+                        }
                     }
 
-                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
-                        $relationDetails['deletions']['cascade'] = true;
-                    } else {
-                        $relationDetails['deletions']['cascade'] = false;
-                    }
+                    $relationDetails['deletions'] = $deletions;
                 }
 
                 $relationships[$className][] = $relationDetails;
@@ -141,13 +141,13 @@ class AnalyseCommand extends Command
 
                 if (AnalysisMode::DELETIONS === $mode) {
                     $io->text('Deletions properties:');
-                    if ($relation['deletions']['onDelete']) {
-                        $io->text("- onDelete: {$relation['onDelete']}");
+                    if (isset($relation['deletions']['onDelete'])) {
+                        $io->text("- onDelete: {$relation['deletions']['onDelete']}");
                     }
-                    if ($relation['deletions']) {
+                    if (isset($relation['deletions']['orphanRemoval'])) {
                         $io->text('- orphanRemoval: true');
                     }
-                    if ($relation['deletions']) {
+                    if (isset($relation['deletions']['cascade'])) {
                         $io->text("- cascade: ['remove']");
                     }
                 }
@@ -181,7 +181,7 @@ class AnalyseCommand extends Command
                     } elseif (AnalysisMode::DELETIONS === $mode) {
                         foreach ($relation['deletions'] as $key => $value) {
                             if ('onDelete' === $key) {
-                                $label = "onDelete: {$relation['onDelete']}";
+                                $label = "onDelete: {$value}";
                             } elseif ('orphanRemoval' === $key) {
                                 $label = 'orphanRemoval: true';
                             } elseif ('cascade' === $key) {
@@ -202,7 +202,7 @@ class AnalyseCommand extends Command
         $graphviz->setFormat($format);
         $imageData = $graphviz->createImageData($graph);
 
-        $fullPath = $outputPath . '/' . $mode->value . $format;
+        $fullPath = $outputPath . '/' . $mode->value . '.' . $format;
         try {
             $this->filesystem->dumpFile($fullPath, $imageData);
         } catch (IOExceptionInterface) {
