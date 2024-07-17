@@ -30,7 +30,7 @@ class AnalyseCommand extends Command
     {
         $this
             ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
-            ->addOption('generate-graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
+            ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
         ;
     }
 
@@ -62,7 +62,7 @@ class AnalyseCommand extends Command
 
         $outputPath = $input->getOption('output');
 
-        if ($input->getOption('generate-graph')) {
+        if ($input->getOption('graph')) {
             if ($outputPath) {
                 $this->generateGraph($relationships, $outputPath, $io);
             }
