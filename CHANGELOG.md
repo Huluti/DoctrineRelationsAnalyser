@@ -7,15 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2024-07-18
+
+### Added
+
+- Introduce level info (orm/database) in deletion settings
 
 ## [0.1.1] - 2024-07-18
 
 ### Fixed
 
-- Add minimum-stability and prefer-stable for graphp packages.
+- Add minimum-stability and prefer-stable for graphp packages
 
 ## [0.1.0] - 2024-07-18
 
 ### Added
 
-- Initial version.
+- Initial version
