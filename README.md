@@ -40,6 +40,10 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 - --output: Optional. Path for data reporting.
 - --graph: Optional. Generate and save visualization graph.
 
+## Limitations
+
+- Only work with first joinColumn for now.
+
 ## Contributions
 
 Contributions are welcome! If you have ideas for improvements, new features, or bug fixes, please open an issue or a pull request.

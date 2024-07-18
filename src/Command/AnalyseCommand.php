@@ -78,17 +78,19 @@ class AnalyseCommand extends Command
                 ];
 
                 if (AnalysisMode::DELETIONS === $mode) {
-                    $deletions = [
-                        'onDelete' => $association['onDelete'] ?? false,
-                        'orphanRemoval' => $association['orphanRemoval'] ?? false,
-                        'cascade' => isset($association['cascade']) && in_array('remove', $association['cascade'], true),
-                    ];
+                    $deletions = [];
 
-                    if (isset($association['joinColumns'])) {
-                        foreach ($association['joinColumns'] as $joinColumn) {
-                            if (isset($joinColumn['onDelete'])) {
-                                $deletions['onDelete'] = $joinColumn['onDelete'];
-                            }
+                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
+                        $deletions['orphanRemoval'] = true;
+                    }
+
+                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
+                        $deletions['cascade'] = true;
+                    }
+
+                    if (isset($association['joinColumns']) && !empty($association['joinColumns'])) {
+                        if (isset($association['joinColumns'][0]['onDelete']) && !empty($association['joinColumns'][0]['onDelete'])) {
+                            $deletions['onDelete'] = $association['joinColumns'][0]['onDelete'];
                         }
                     }
 
