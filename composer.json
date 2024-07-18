@@ -20,6 +20,8 @@
             "DoctrineRelationsAnalyserBundle\\": "src/"
         }
     },
+    "minimum-stability": "dev",
+    "prefer-stable" : true,
     "require": {
         "php": ">=8.0",
         "symfony/console": "^7.1",
