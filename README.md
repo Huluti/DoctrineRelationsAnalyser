@@ -38,7 +38,7 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 
 To check deletion relations of two entities in a graph:
 
-    php bin/console doctrine-relations-analyser:analyse --output data/ --graph --entities="App\\Entity\\User,App\\Entity\\Workspace" --mode="deletions
+    php bin/console doctrine-relations-analyser:analyse --output data/ --graph --entities="App\\Entity\\User,App\\Entity\\Workspace" --mode="deletions"
 
 #### Command-line Arguments
 
