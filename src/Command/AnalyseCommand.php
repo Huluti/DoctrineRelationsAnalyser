@@ -205,10 +205,10 @@ class AnalyseCommand extends Command
                             } elseif ('orphanRemoval' === $key) {
                                 $label = 'orphanRemoval: true';
                             } elseif ('cascade' === $key) {
-                                $label = "cascade: \'remove\'";
+                                $label = 'cascade: "remove"';
                             }
                             if (isset($label)) {
-                                $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
                                 $edge->setAttribute('graphviz.label', $label);
                             }
                         }

@@ -23,7 +23,8 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 
 ### Requirements
 
-- dot executable (graphviz)
+- Graphviz:
+    - **For Alpine Linux:** `graphviz fontconfig ttf-freefont`
 
 ### Installation
 
