@@ -157,15 +157,18 @@ class AnalyseCommand extends Command
                 $io->text('Type: ' . $this->getRelationType($relation['type']));
 
                 if (AnalysisMode::DELETIONS === $mode) {
-                    $io->text('Deletions properties:');
-                    if (isset($relation['deletions']['onDelete'])) {
-                        $io->text("- onDelete: {$relation['deletions']['onDelete']}");
-                    }
-                    if (isset($relation['deletions']['orphanRemoval'])) {
-                        $io->text('- orphanRemoval: true');
-                    }
-                    if (isset($relation['deletions']['cascade'])) {
-                        $io->text("- cascade: ['remove']");
+                    if (!empty($relation['deletions'])) {
+                        $io->text('Deletions properties:');
+
+                        if (isset($relation['deletions']['onDelete'])) {
+                            $io->text("- onDelete: {$relation['deletions']['onDelete']}");
+                        }
+                        if (isset($relation['deletions']['orphanRemoval'])) {
+                            $io->text('- orphanRemoval: true');
+                        }
+                        if (isset($relation['deletions']['cascade'])) {
+                            $io->text("- cascade: ['remove']");
+                        }
                     }
                 }
 
@@ -202,7 +205,7 @@ class AnalyseCommand extends Command
                             } elseif ('orphanRemoval' === $key) {
                                 $label = 'orphanRemoval: true';
                             } elseif ('cascade' === $key) {
-                                $label = "cascade: ['remove']";
+                                $label = "cascade: \'remove\'";
                             }
                             if (isset($label)) {
                                 $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
