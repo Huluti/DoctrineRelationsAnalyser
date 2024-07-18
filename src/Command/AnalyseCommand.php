@@ -200,15 +200,23 @@ class AnalyseCommand extends Command
                         $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
                     } elseif (AnalysisMode::DELETIONS === $mode) {
                         foreach ($relation['deletions'] as $key => $value) {
+                            $invertArrow = false;
                             if ('onDelete' === $key) {
                                 $label = "onDelete: {$value}";
+                                $invertArrow = true;
                             } elseif ('orphanRemoval' === $key) {
                                 $label = 'orphanRemoval: true';
                             } elseif ('cascade' === $key) {
                                 $label = 'cascade: "remove"';
                             }
                             if (isset($label)) {
-                                $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
+                                if ($invertArrow) {
+                                    // Arrow points from parent (entity) to child (targetEntity)
+                                    $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
+                                } else {
+                                    // Arrow points from child (targetEntity) to parent (entity)
+                                    $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                }
                                 $edge->setAttribute('graphviz.label', $label);
                             }
                         }
