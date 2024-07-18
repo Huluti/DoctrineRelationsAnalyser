@@ -1,8 +1,8 @@
 # Doctrine Relations Analyzer
 
-![Packagist Version](https://img.shields.io/packagist/v/huluti/!%5BPackagist%20Downloads%5D(https%3A%2F%2Fimg.shields.io%2Fpackagist%2F%3Ainterval%2Fhuluti%2Fdoctrine-relations-analyser))
-![Packagist License](https://img.shields.io/packagist/l/%20huluti/doctrine-relations-analyser)
-![Packagist Downloads](https://img.shields.io/packagist/:interval/huluti/doctrine-relations-analyser)
+![Packagist Version](https://img.shields.io/packagist/v/huluti/doctrine-relations-analyser)
+![Packagist License](https://img.shields.io/packagist/l/huluti/doctrine-relations-analyser)
+![Packagist Downloads](https://img.shields.io/packagist/dt/huluti/doctrine-relations-analyser)
 
 ## Overview
 
