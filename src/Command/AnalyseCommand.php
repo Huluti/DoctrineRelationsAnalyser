@@ -6,6 +6,8 @@ namespace DoctrineRelationsAnalyserBundle\Command;
 
 use Doctrine\ORM\EntityManagerInterface;
 use DoctrineRelationsAnalyserBundle\Enum\AnalysisMode;
+use DoctrineRelationsAnalyserBundle\Enum\DeletionType;
+use DoctrineRelationsAnalyserBundle\Enum\Level;
 use Graphp\Graph\Graph;
 use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -81,16 +83,28 @@ class AnalyseCommand extends Command
                     $deletions = [];
 
                     if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
-                        $deletions['orphanRemoval'] = true;
+                        $deletions[] = [
+                            'type' => DeletionType::ORPHAN_REMOVAL,
+                            'level' => Level::ORM,
+                            'value' => 'true',
+                        ];
                     }
 
                     if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
-                        $deletions['cascade'] = true;
+                        $deletions[] = [
+                            'type' => DeletionType::CASCADE,
+                            'level' => Level::ORM,
+                            'value' => '["remove"]',
+                        ];
                     }
 
                     if (isset($association['joinColumns']) && !empty($association['joinColumns'])) {
                         if (isset($association['joinColumns'][0]['onDelete']) && !empty($association['joinColumns'][0]['onDelete'])) {
-                            $deletions['onDelete'] = $association['joinColumns'][0]['onDelete'];
+                            $deletions[] = [
+                                'type' => DeletionType::ON_DELETE,
+                                'level' => Level::DATABASE,
+                                'value' => $association['joinColumns'][0]['onDelete'],
+                            ];
                         }
                     }
 
@@ -162,14 +176,9 @@ class AnalyseCommand extends Command
                     if (!empty($relation['deletions'])) {
                         $io->text('Deletions properties:');
 
-                        if (isset($relation['deletions']['onDelete'])) {
-                            $io->text("- onDelete: {$relation['deletions']['onDelete']}");
-                        }
-                        if (isset($relation['deletions']['orphanRemoval'])) {
-                            $io->text('- orphanRemoval: true');
-                        }
-                        if (isset($relation['deletions']['cascade'])) {
-                            $io->text("- cascade: ['remove']");
+                        foreach ($relation['deletions'] as $deletion) {
+                            $level = Level::ORM === $deletion['level'] ? 'ORM' : 'Database';
+                            $io->text("- {$deletion['type']->value}: {$deletion['value']} ($level level)");
                         }
                     }
                 }
@@ -201,25 +210,21 @@ class AnalyseCommand extends Command
                         $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
                         $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
                     } elseif (AnalysisMode::DELETIONS === $mode) {
-                        foreach ($relation['deletions'] as $key => $value) {
-                            $invertArrow = false;
-                            if ('onDelete' === $key) {
-                                $label = "onDelete: {$value}";
-                                $invertArrow = true;
-                            } elseif ('orphanRemoval' === $key) {
-                                $label = 'orphanRemoval: true';
-                            } elseif ('cascade' === $key) {
-                                $label = 'cascade: "remove"';
+                        foreach ($relation['deletions'] as $deletion) {
+                            $invertArrow = DeletionType::ON_DELETE === $deletion['type'] ? true : false;
+                            if ($invertArrow) {
+                                // Arrow points from parent (entity) to child (targetEntity)
+                                $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
+                            } else {
+                                // Arrow points from child (targetEntity) to parent (entity)
+                                $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
                             }
-                            if (isset($label)) {
-                                if ($invertArrow) {
-                                    // Arrow points from parent (entity) to child (targetEntity)
-                                    $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
-                                } else {
-                                    // Arrow points from child (targetEntity) to parent (entity)
-                                    $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
-                                }
-                                $edge->setAttribute('graphviz.label', $label);
+                            $label = "{$deletion['type']->value}: {$deletion['value']}";
+                            $edge->setAttribute('graphviz.label', $label);
+                            if (Level::ORM === $deletion['level']) {
+                                $edge->setAttribute('graphviz.color', 'blue');
+                            } else {
+                                $edge->setAttribute('graphviz.color', 'red');
                             }
                         }
                     }
