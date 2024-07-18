@@ -35,7 +35,7 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 
 #### Command-line Arguments
 
-- --mode: Optional. Comma-separated list of entities to analyze.
+- --entities: Optional. Comma-separated list of entities to analyze.
 - --mode: Optional. Permit to choose the analysis mode (all | deletions).
 - --output: Optional. Path for data reporting.
 - --graph: Optional. Generate and save visualization graph.

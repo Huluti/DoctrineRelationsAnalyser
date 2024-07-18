@@ -99,6 +99,12 @@ class AnalyseCommand extends Command
             }
         }
 
+        if (empty($relationships)) {
+            $io->error('No relationships detected');
+
+            return Command::FAILURE;
+        }
+
         $this->outputRelationships($relationships, $io, $mode);
 
         $outputPath = $input->getOption('output');
