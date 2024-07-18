@@ -56,6 +56,13 @@ To check deletion relations of two entities in a graph:
 
 Contributions are welcome! If you have ideas for improvements, new features, or bug fixes, please open an issue or a pull request.
 
+## Donations
+
+Do you like the tool? Would you like to support its development? Feel free to donate 🤗
+
+[![Liberapay receiving](https://img.shields.io/liberapay/receives/hugoposnic)](https://liberapay.com/hugoposnic)
+[![Liberapay patrons](https://img.shields.io/liberapay/patrons/hugoposnic)](https://liberapay.com/hugoposnic)
+
 ## License
 
 This project is licensed under the GNU GPL v3 License.
