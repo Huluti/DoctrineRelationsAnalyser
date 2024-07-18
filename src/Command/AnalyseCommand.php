@@ -34,6 +34,7 @@ class AnalyseCommand extends Command
     protected function configure(): void
     {
         $this
+            ->addOption('entities', null, InputOption::VALUE_OPTIONAL, 'Comma-separated list of entities to analyze')
             ->addOption('mode', null, InputOption::VALUE_OPTIONAL, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, AnalysisMode::cases())
             ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
             ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
@@ -56,11 +57,19 @@ class AnalyseCommand extends Command
 
         $io->section('Analysis mode: ' . $mode->value);
 
+        $entitiesOption = $input->getOption('entities');
+        $entitiesToAnalyze = $entitiesOption ? explode(',', $entitiesOption) : [];
+        $restrictedEntities = !empty($entitiesToAnalyze);
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
+
         $relationships = [];
 
         foreach ($metaData as $meta) {
             $className = $meta->getName();
+            if ($restrictedEntities && !in_array($className, $entitiesToAnalyze, true)) {
+                continue; // Skip entities not in the list
+            }
+
             foreach ($meta->associationMappings as $fieldName => $association) {
                 $relationDetails = [
                     'field' => $fieldName,
