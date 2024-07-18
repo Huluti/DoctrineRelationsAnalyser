@@ -23,7 +23,8 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 
 ### Requirements
 
-- dot executable (graphviz)
+- Graphviz:
+    - **For Alpine Linux:** `graphviz fontconfig ttf-freefont`
 
 ### Installation
 
@@ -33,11 +34,22 @@ Managing cascade operations, especially deletions, is crucial to avoid unintenti
 
     php bin/console doctrine-relations-analyser:analyse
 
+#### Examples
+
+To check deletion relations of two entities in a graph:
+
+    php bin/console doctrine-relations-analyser:analyse --output data/ --graph --entities="App\\Entity\\User,App\\Entity\\Workspace" --mode="deletions
+
 #### Command-line Arguments
 
-- --mode: Optional. Permit to choose the analysis mode. (all | deletions)
+- --entities: Optional. Comma-separated list of entities to analyze.
+- --mode: Optional. Permit to choose the analysis mode (all | deletions).
 - --output: Optional. Path for data reporting.
 - --graph: Optional. Generate and save visualization graph.
+
+## Limitations
+
+- Only work with first joinColumn for now.
 
 ## Contributions
 

@@ -34,6 +34,7 @@ class AnalyseCommand extends Command
     protected function configure(): void
     {
         $this
+            ->addOption('entities', null, InputOption::VALUE_OPTIONAL, 'Comma-separated list of entities to analyze')
             ->addOption('mode', null, InputOption::VALUE_OPTIONAL, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, AnalysisMode::cases())
             ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
             ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
@@ -56,11 +57,19 @@ class AnalyseCommand extends Command
 
         $io->section('Analysis mode: ' . $mode->value);
 
+        $entitiesOption = $input->getOption('entities');
+        $entitiesToAnalyze = $entitiesOption ? explode(',', $entitiesOption) : [];
+        $restrictedEntities = !empty($entitiesToAnalyze);
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
+
         $relationships = [];
 
         foreach ($metaData as $meta) {
             $className = $meta->getName();
+            if ($restrictedEntities && !in_array($className, $entitiesToAnalyze, true)) {
+                continue; // Skip entities not in the list
+            }
+
             foreach ($meta->associationMappings as $fieldName => $association) {
                 $relationDetails = [
                     'field' => $fieldName,
@@ -69,17 +78,19 @@ class AnalyseCommand extends Command
                 ];
 
                 if (AnalysisMode::DELETIONS === $mode) {
-                    $deletions = [
-                        'onDelete' => $association['onDelete'] ?? false,
-                        'orphanRemoval' => $association['orphanRemoval'] ?? false,
-                        'cascade' => isset($association['cascade']) && in_array('remove', $association['cascade'], true),
-                    ];
+                    $deletions = [];
 
-                    if (isset($association['joinColumns'])) {
-                        foreach ($association['joinColumns'] as $joinColumn) {
-                            if (isset($joinColumn['onDelete'])) {
-                                $deletions['onDelete'] = $joinColumn['onDelete'];
-                            }
+                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
+                        $deletions['orphanRemoval'] = true;
+                    }
+
+                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
+                        $deletions['cascade'] = true;
+                    }
+
+                    if (isset($association['joinColumns']) && !empty($association['joinColumns'])) {
+                        if (isset($association['joinColumns'][0]['onDelete']) && !empty($association['joinColumns'][0]['onDelete'])) {
+                            $deletions['onDelete'] = $association['joinColumns'][0]['onDelete'];
                         }
                     }
 
@@ -90,20 +101,28 @@ class AnalyseCommand extends Command
             }
         }
 
+        if (empty($relationships)) {
+            $io->error('No relationships detected');
+
+            return Command::FAILURE;
+        }
+
         $this->outputRelationships($relationships, $io, $mode);
 
         $outputPath = $input->getOption('output');
-        $outputPath = ltrim($outputPath, '/');
+        if ($outputPath) {
+            $outputPath = ltrim($outputPath, '/');
 
-        try {
-            // Ensure $outputPath exists, create it if it doesn't
-            if (!$this->filesystem->exists($outputPath)) {
-                $this->filesystem->mkdir($outputPath);
+            try {
+                // Ensure $outputPath exists, create it if it doesn't
+                if (!$this->filesystem->exists($outputPath)) {
+                    $this->filesystem->mkdir($outputPath);
+                }
+            } catch (IOExceptionInterface $e) {
+                $io->error("Can't create folder: " . $e->getMessage());
+
+                return Command::FAILURE;
             }
-        } catch (IOExceptionInterface $e) {
-            $io->error("Can't create folder: " . $e->getMessage());
-
-            return Command::FAILURE;
         }
 
         if ($input->getOption('graph')) {
@@ -140,15 +159,18 @@ class AnalyseCommand extends Command
                 $io->text('Type: ' . $this->getRelationType($relation['type']));
 
                 if (AnalysisMode::DELETIONS === $mode) {
-                    $io->text('Deletions properties:');
-                    if (isset($relation['deletions']['onDelete'])) {
-                        $io->text("- onDelete: {$relation['deletions']['onDelete']}");
-                    }
-                    if (isset($relation['deletions']['orphanRemoval'])) {
-                        $io->text('- orphanRemoval: true');
-                    }
-                    if (isset($relation['deletions']['cascade'])) {
-                        $io->text("- cascade: ['remove']");
+                    if (!empty($relation['deletions'])) {
+                        $io->text('Deletions properties:');
+
+                        if (isset($relation['deletions']['onDelete'])) {
+                            $io->text("- onDelete: {$relation['deletions']['onDelete']}");
+                        }
+                        if (isset($relation['deletions']['orphanRemoval'])) {
+                            $io->text('- orphanRemoval: true');
+                        }
+                        if (isset($relation['deletions']['cascade'])) {
+                            $io->text("- cascade: ['remove']");
+                        }
                     }
                 }
 
@@ -180,15 +202,23 @@ class AnalyseCommand extends Command
                         $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
                     } elseif (AnalysisMode::DELETIONS === $mode) {
                         foreach ($relation['deletions'] as $key => $value) {
+                            $invertArrow = false;
                             if ('onDelete' === $key) {
                                 $label = "onDelete: {$value}";
+                                $invertArrow = true;
                             } elseif ('orphanRemoval' === $key) {
                                 $label = 'orphanRemoval: true';
                             } elseif ('cascade' === $key) {
-                                $label = "cascade: ['remove']";
+                                $label = 'cascade: "remove"';
                             }
                             if (isset($label)) {
-                                $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                if ($invertArrow) {
+                                    // Arrow points from parent (entity) to child (targetEntity)
+                                    $edge = $graph->createEdgeDirected($nodes[$targetEntity], $nodes[$entity]);
+                                } else {
+                                    // Arrow points from child (targetEntity) to parent (entity)
+                                    $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
+                                }
                                 $edge->setAttribute('graphviz.label', $label);
                             }
                         }
