@@ -110,17 +110,19 @@ class AnalyseCommand extends Command
         $this->outputRelationships($relationships, $io, $mode);
 
         $outputPath = $input->getOption('output');
-        $outputPath = ltrim($outputPath, '/');
+        if ($outputPath) {
+            $outputPath = ltrim($outputPath, '/');
 
-        try {
-            // Ensure $outputPath exists, create it if it doesn't
-            if (!$this->filesystem->exists($outputPath)) {
-                $this->filesystem->mkdir($outputPath);
+            try {
+                // Ensure $outputPath exists, create it if it doesn't
+                if (!$this->filesystem->exists($outputPath)) {
+                    $this->filesystem->mkdir($outputPath);
+                }
+            } catch (IOExceptionInterface $e) {
+                $io->error("Can't create folder: " . $e->getMessage());
+
+                return Command::FAILURE;
             }
-        } catch (IOExceptionInterface $e) {
-            $io->error("Can't create folder: " . $e->getMessage());
-
-            return Command::FAILURE;
         }
 
         if ($input->getOption('graph')) {
