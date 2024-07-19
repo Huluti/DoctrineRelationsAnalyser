@@ -72,16 +72,17 @@ return [
 
 To check deletion relations of two entities in a graph:
 
-    php bin/console doctrine-relations-analyser:analyse --output data/ --graph --entities="App\\Entity\\User,App\\Entity\\Workspace" --mode="deletions"
+    php bin/console doctrine-relations-analyser:analyse -o data/ -g --entities="App\\Entity\\User,App\\Entity\\Workspace" -m deletions
 
 #### Command-line Arguments
 
-- --entities: Optional. Comma-separated list of entities to analyze.
-- -m, --mode: Optional. Analysis mode: all, deletions [default: "all"]
-- -o, --output: Optional. Output path for reports generated.
-- -g, --graph: Optional. Generate Graphviz graph.
-- -V, --version: Optional. Display help for the given command. When no command is given display help for the list command.
-- -h, --help: Optional. Display this application version.
+- --entities: Optional. Comma-separated list of entities to analyze
+- -m, --mode: Optional. Analysis mode (all, deletions) [default: "all"]
+- -o, --output: Optional. Output path for reports generated
+- -g, --graph: Optional. Generate Graphviz graph
+- --graph-format: Optional. Graph image format (png, svg) [default: "png"]
+- -V, --version: Optional. Display help for the given command. When no command is given display help for the list command
+- -h, --help: Optional. Display this application version
 
 ## Limitations
 

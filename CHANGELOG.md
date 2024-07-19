@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Add new graph-format option
+- Add shortcuts for some parameters
+- Add initial Unit Tests and CI
+
+### Fixed
+- Fix output path trimming
+
 ## [0.3.0] - 2024-07-19
 
 ### Changed
