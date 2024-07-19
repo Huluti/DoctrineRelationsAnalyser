@@ -37,10 +37,10 @@ class AnalyseCommand extends Command
     protected function configure(): void
     {
         $this
-            ->addOption('entities', null, InputOption::VALUE_OPTIONAL, 'Comma-separated list of entities to analyze')
-            ->addOption('mode', null, InputOption::VALUE_OPTIONAL, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, AnalysisMode::cases())
-            ->addOption('output', null, InputOption::VALUE_OPTIONAL, 'Output path for reports generated')
-            ->addOption('graph', null, InputOption::VALUE_NONE, 'Generate Graphviz graph')
+            ->addOption('entities', null, InputOption::VALUE_REQUIRED, 'Comma-separated list of entities to analyze')
+            ->addOption('mode', 'm', InputOption::VALUE_REQUIRED, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, array_column(AnalysisMode::cases(), 'name'))
+            ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output path for reports generated')
+            ->addOption('graph', 'g', InputOption::VALUE_NONE, 'Generate Graphviz graph')
         ;
     }
 
@@ -50,17 +50,47 @@ class AnalyseCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
+        $io->title('Doctrine Relations Analyzer');
+
+        // Validate options
         try {
-            $mode = AnalysisMode::from($input->getOption('mode'));
+            $modeOption = AnalysisMode::from($input->getOption('mode'));
         } catch (ValueError $e) {
             $io->error('Invalid mode. Allowed values are: all, deletions.');
 
             return Command::FAILURE;
         }
 
-        $io->section('Analysis mode: ' . $mode->value);
-
+        $outputPathOption = !empty($input->getOption('output')) ? (string) $input->getOption('output') : '';
+        $graphOption = (bool) $input->getOption('graph');
         $entitiesOption = $input->getOption('entities');
+
+        $io->text('Entities: ' . (empty($entitiesOption) ? 'all' : $entitiesOption));
+        $io->text('Analysis mode: ' . $modeOption->value);
+        $io->text('Graph generation: ' . ($graphOption ? 'yes' : 'no'));
+        $io->text('Output path: ' . ($outputPathOption ?: 'not set'));
+
+        if ($graphOption) {
+            if (empty($outputPathOption)) {
+                $io->error('Graph option requires setting output folder');
+
+                return Command::FAILURE;
+            } else {
+                $outputPathOption = HelperService::cleanPath($outputPathOption);
+
+                try {
+                    // Ensure $outputPath exists, create it if it doesn't
+                    if (!$this->filesystem->exists($outputPathOption)) {
+                        $this->filesystem->mkdir($outputPathOption);
+                    }
+                } catch (IOExceptionInterface $e) {
+                    $io->error("Can't create folder: " . $e->getMessage());
+
+                    return Command::FAILURE;
+                }
+            }
+        }
+
         $entitiesToAnalyze = $entitiesOption ? explode(',', $entitiesOption) : [];
         $restrictedEntities = !empty($entitiesToAnalyze);
         $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
@@ -81,7 +111,7 @@ class AnalyseCommand extends Command
                     'type' => $association['type'],
                 ];
 
-                if (AnalysisMode::DELETIONS === $mode) {
+                if (AnalysisMode::DELETIONS === $modeOption) {
                     $deletions = [];
 
                     if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
@@ -123,35 +153,13 @@ class AnalyseCommand extends Command
             return Command::FAILURE;
         }
 
-        $this->outputRelationships($relationships, $io, $mode);
+        $this->outputRelationships($relationships, $io, $modeOption);
 
-        $outputPath = $input->getOption('output');
-        if ($outputPath) {
-            $outputPath = ltrim($outputPath, '/');
-
-            try {
-                // Ensure $outputPath exists, create it if it doesn't
-                if (!$this->filesystem->exists($outputPath)) {
-                    $this->filesystem->mkdir($outputPath);
-                }
-            } catch (IOExceptionInterface $e) {
-                $io->error("Can't create folder: " . $e->getMessage());
-
-                return Command::FAILURE;
-            }
-        }
-
-        if ($input->getOption('graph')) {
-            if ($outputPath) {
-                if ($this->generateGraph($relationships, $outputPath, $mode)) {
-                    $io->success("Graph image generated in: $outputPath");
-                } else {
-                    $io->error("Can't save graph image");
-
-                    return Command::FAILURE;
-                }
+        if ($graphOption) {
+            if ($this->generateGraph($relationships, $outputPathOption, $modeOption)) {
+                $io->success("Graph image generated in: $outputPathOption");
             } else {
-                $io->error('Graph option requires setting output folder');
+                $io->error("Can't save graph image");
 
                 return Command::FAILURE;
             }

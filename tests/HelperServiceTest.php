@@ -20,4 +20,11 @@ final class HelperServiceTest extends KernelTestCase
         $this->assertSame(HelperService::getRelationType(ClassMetadata::ONE_TO_MANY), 'OneToMany');
         $this->assertSame(HelperService::getRelationType(ClassMetadata::MANY_TO_MANY), 'ManyToMany');
     }
+
+    public function testGetCleanPath(): void
+    {
+        $this->assertSame(HelperService::cleanPath('data '), 'data');
+        $this->assertSame(HelperService::cleanPath(' data/'), 'data');
+        $this->assertSame(HelperService::cleanPath('data'), 'data');
+    }
 }
