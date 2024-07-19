@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace DoctrineRelationsAnalyserBundle\Command;
 
-use Doctrine\ORM\EntityManagerInterface;
 use DoctrineRelationsAnalyserBundle\Enum\AnalysisMode;
 use DoctrineRelationsAnalyserBundle\Enum\DeletionType;
+use DoctrineRelationsAnalyserBundle\Enum\GraphFormat;
 use DoctrineRelationsAnalyserBundle\Enum\Level;
 use DoctrineRelationsAnalyserBundle\Service\HelperService;
+use DoctrineRelationsAnalyserBundle\Service\RelationshipService;
 use Graphp\Graph\Graph;
 use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -28,7 +29,7 @@ use ValueError;
 class AnalyseCommand extends Command
 {
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
+        private readonly RelationshipService $relationshipService,
         private readonly Filesystem $filesystem
     ) {
         parent::__construct();
@@ -38,9 +39,10 @@ class AnalyseCommand extends Command
     {
         $this
             ->addOption('entities', null, InputOption::VALUE_REQUIRED, 'Comma-separated list of entities to analyze')
-            ->addOption('mode', 'm', InputOption::VALUE_REQUIRED, 'Analysis mode: all, deletions', AnalysisMode::ALL->value, array_column(AnalysisMode::cases(), 'name'))
+            ->addOption('mode', 'm', InputOption::VALUE_REQUIRED, 'Analysis mode', AnalysisMode::ALL->value, array_column(AnalysisMode::cases(), 'name'))
             ->addOption('output', 'o', InputOption::VALUE_REQUIRED, 'Output path for reports generated')
             ->addOption('graph', 'g', InputOption::VALUE_NONE, 'Generate Graphviz graph')
+            ->addOption('graph-format', null, InputOption::VALUE_REQUIRED, 'Graph image format', GraphFormat::PNG->value, array_column(GraphFormat::cases(), 'name'))
         ;
     }
 
@@ -56,7 +58,15 @@ class AnalyseCommand extends Command
         try {
             $modeOption = AnalysisMode::from($input->getOption('mode'));
         } catch (ValueError $e) {
-            $io->error('Invalid mode. Allowed values are: all, deletions.');
+            $io->error('Invalid mode. Allowed values are:  ' . implode(array_column(AnalysisMode::cases(), 'name', ',')));
+
+            return Command::FAILURE;
+        }
+
+        try {
+            $graphFormatOption = GraphFormat::from($input->getOption('graph-format'));
+        } catch (ValueError $e) {
+            $io->error('Invalid graph format. Allowed values are: ' . implode(array_column(GraphFormat::cases(), 'name', ',')));
 
             return Command::FAILURE;
         }
@@ -92,61 +102,7 @@ class AnalyseCommand extends Command
         }
 
         $entitiesToAnalyze = $entitiesOption ? explode(',', $entitiesOption) : [];
-        $restrictedEntities = !empty($entitiesToAnalyze);
-        $metaData = $this->entityManager->getMetadataFactory()->getAllMetadata();
-
-        $relationships = [];
-
-        foreach ($metaData as $meta) {
-            $className = $meta->getName();
-            if ($restrictedEntities && !in_array($className, $entitiesToAnalyze, true)) {
-                continue; // Skip entities not in the list
-            }
-
-            $relationships[$className] = [];
-            foreach ($meta->associationMappings as $fieldName => $association) {
-                $relationDetails = [
-                    'field' => $fieldName,
-                    'targetEntity' => $association['targetEntity'],
-                    'type' => $association['type'],
-                ];
-
-                if (AnalysisMode::DELETIONS === $modeOption) {
-                    $deletions = [];
-
-                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
-                        $deletions[] = [
-                            'type' => DeletionType::ORPHAN_REMOVAL,
-                            'level' => Level::ORM,
-                            'value' => 'true',
-                        ];
-                    }
-
-                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
-                        $deletions[] = [
-                            'type' => DeletionType::CASCADE,
-                            'level' => Level::ORM,
-                            'value' => '["remove"]',
-                        ];
-                    }
-
-                    if (!empty($association['joinColumns'])) {
-                        if (!empty($association['joinColumns'][0]['onDelete'])) {
-                            $deletions[] = [
-                                'type' => DeletionType::ON_DELETE,
-                                'level' => Level::DATABASE,
-                                'value' => $association['joinColumns'][0]['onDelete'],
-                            ];
-                        }
-                    }
-
-                    $relationDetails['deletions'] = $deletions;
-                }
-
-                $relationships[$className][] = $relationDetails;
-            }
-        }
-
+        $relationships = $this->relationshipService->fetch($entitiesToAnalyze, $modeOption);
         if (empty($relationships)) {
             $io->error('No relationships detected');
 
@@ -156,7 +112,7 @@ class AnalyseCommand extends Command
         $this->outputRelationships($relationships, $io, $modeOption);
 
         if ($graphOption) {
-            if ($this->generateGraph($relationships, $outputPathOption, $modeOption)) {
+            if ($this->generateGraph($relationships, $outputPathOption, $modeOption, $graphFormatOption)) {
                 $io->success("Graph image generated in: $outputPathOption");
             } else {
                 $io->error("Can't save graph image");
@@ -204,7 +160,7 @@ class AnalyseCommand extends Command
     /**
      * @param array<mixed> $relationships
      */
-    private function generateGraph(array $relationships, string $outputPath, AnalysisMode $mode): bool
+    private function generateGraph(array $relationships, string $outputPath, AnalysisMode $mode, GraphFormat $format): bool
     {
         $graph = new Graph();
         $graph->setAttribute('graphviz.graph.rankdir', 'LR');
@@ -248,12 +204,11 @@ class AnalyseCommand extends Command
             }
         }
 
-        $format = 'png';
         $graphviz = new GraphViz();
-        $graphviz->setFormat($format);
+        $graphviz->setFormat($format->value);
         $imageData = $graphviz->createImageData($graph);
 
-        $fullPath = $outputPath . '/' . $mode->value . '.' . $format;
+        $fullPath = $outputPath . '/' . $mode->value . '.' . $format->value;
         try {
             $this->filesystem->dumpFile($fullPath, $imageData);
         } catch (IOExceptionInterface) {
