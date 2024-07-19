@@ -98,8 +98,8 @@ class AnalyseCommand extends Command
                         ];
                     }
 
-                    if (isset($association['joinColumns']) && !empty($association['joinColumns'])) {
-                        if (isset($association['joinColumns'][0]['onDelete']) && !empty($association['joinColumns'][0]['onDelete'])) {
+                    if (!empty($association['joinColumns'])) {
+                        if (!empty($association['joinColumns'][0]['onDelete'])) {
                             $deletions[] = [
                                 'type' => DeletionType::ON_DELETE,
                                 'level' => Level::DATABASE,
@@ -163,6 +163,9 @@ class AnalyseCommand extends Command
         return Command::SUCCESS;
     }
 
+    /**
+     * @param array<mixed> $relationships
+     */
     private function outputRelationships(array $relationships, SymfonyStyle $io, AnalysisMode $mode): void
     {
         foreach ($relationships as $entity => $relations) {
@@ -188,6 +191,9 @@ class AnalyseCommand extends Command
         }
     }
 
+    /**
+     * @param array<mixed> $relationships
+     */
     private function generateGraph(array $relationships, string $outputPath, AnalysisMode $mode): bool
     {
         $graph = new Graph();
