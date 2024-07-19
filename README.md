@@ -25,7 +25,7 @@ Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade 
 ### Requirements
 
 - Symfony >= 6.4
-- PHP >= 8.0
+- PHP >= 8.1
 - Graphviz:
     - **For Alpine Linux:** `graphviz fontconfig ttf-freefont`
 
