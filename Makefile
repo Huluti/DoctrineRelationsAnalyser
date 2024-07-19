@@ -3,3 +3,6 @@ analyze:
 
 lint:
 	php ./vendor/bin/php-cs-fixer fix
+
+test:
+	php ./vendor/bin/simple-phpunit

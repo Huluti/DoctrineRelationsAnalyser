@@ -8,6 +8,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use DoctrineRelationsAnalyserBundle\Enum\AnalysisMode;
 use DoctrineRelationsAnalyserBundle\Enum\DeletionType;
 use DoctrineRelationsAnalyserBundle\Enum\Level;
+use DoctrineRelationsAnalyserBundle\Service\HelperService;
 use Graphp\Graph\Graph;
 use Graphp\GraphViz\GraphViz;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -173,7 +174,7 @@ class AnalyseCommand extends Command
             foreach ($relations as $relation) {
                 $io->text("Field: {$relation['field']}");
                 $io->text("Target Entity: {$relation['targetEntity']}");
-                $io->text('Type: ' . $this->getRelationType($relation['type']));
+                $io->text('Type: ' . HelperService::getRelationType($relation['type']));
 
                 if (AnalysisMode::DELETIONS === $mode) {
                     if (!empty($relation['deletions'])) {
@@ -214,7 +215,7 @@ class AnalyseCommand extends Command
                 if (isset($nodes[$targetEntity])) {
                     if (AnalysisMode::ALL === $mode) {
                         $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
-                        $edge->setAttribute('graphviz.label', $this->getRelationType($relation['type']));
+                        $edge->setAttribute('graphviz.label', HelperService::getRelationType($relation['type']));
                     } elseif (AnalysisMode::DELETIONS === $mode) {
                         foreach ($relation['deletions'] as $deletion) {
                             $invertArrow = DeletionType::ON_DELETE === $deletion['type'] ? true : false;
@@ -251,16 +252,5 @@ class AnalyseCommand extends Command
         }
 
         return true;
-    }
-
-    private function getRelationType(int $type): string
-    {
-        return match ($type) {
-            \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_ONE => 'OneToOne',
-            \Doctrine\ORM\Mapping\ClassMetadata::MANY_TO_ONE => 'ManyToOne',
-            \Doctrine\ORM\Mapping\ClassMetadata::ONE_TO_MANY => 'OneToMany',
-            \Doctrine\ORM\Mapping\ClassMetadata::MANY_TO_MANY => 'ManyToMany',
-            default => 'Unknown',
-        };
     }
 }

@@ -18,23 +18,39 @@
     ],
     "autoload": {
         "psr-4": {
-            "DoctrineRelationsAnalyserBundle\\": "src/"
+            "DoctrineRelationsAnalyserBundle\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "DoctrineRelationsAnalyserBundle\\Tests\\": "tests"
         }
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
-        "php": ">=8.0",
+        "php": ">=8.1",
         "symfony/console": "^6.4|^7.0|^7.1",
         "symfony/http-kernel": "^6.4|^7.0",
         "doctrine/orm": "^3.0",
         "symfony/dependency-injection": "^6.4|^7.0",
         "graphp/graphviz": "^1@dev",
         "graphp/graph": "^1@dev",
-        "symfony/filesystem": "^6.4|^7.0"
+        "symfony/filesystem": "^6.4|^7.0",
+        "symfony/framework-bundle": "^6.4|^7.0"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.59",
-        "phpstan/phpstan": "^1.11"
+        "phpstan/phpstan": "^1.11",
+        "phpunit/phpunit": "^9",
+        "symfony/phpunit-bridge": "^6.4|^7.0"
+    },
+    "config": {
+    },
+    "scripts": {
+        "auto-scripts": {
+            "cache:clear": "symfony-cmd",
+            "assets:install %PUBLIC_DIR%": "symfony-cmd"
+        }
     }
 }
