@@ -9,7 +9,7 @@ use DoctrineRelationsAnalyserBundle\Service\HelperService;
 use Symfony\Bundle\FrameworkBundle\Test\KernelTestCase;
 
 /**
- * @covers HelperService
+ * @covers \HelperService
  */
 final class HelperServiceTest extends KernelTestCase
 {
