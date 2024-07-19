@@ -58,7 +58,7 @@ class AnalyseCommand extends Command
         try {
             $modeOption = AnalysisMode::from($input->getOption('mode'));
         } catch (ValueError $e) {
-            $io->error('Invalid mode. Allowed values are:  ' . implode(array_column(AnalysisMode::cases(), 'name', ',')));
+            $io->error('Invalid mode. Allowed values are: ' . implode(',', array_column(AnalysisMode::cases(), 'value')));
 
             return Command::FAILURE;
         }
@@ -66,7 +66,7 @@ class AnalyseCommand extends Command
         try {
             $graphFormatOption = GraphFormat::from($input->getOption('graph-format'));
         } catch (ValueError $e) {
-            $io->error('Invalid graph format. Allowed values are: ' . implode(array_column(GraphFormat::cases(), 'name', ',')));
+            $io->error('Invalid graph format. Allowed values are: ' . implode(',', array_column(GraphFormat::cases(), 'value')));
 
             return Command::FAILURE;
         }
