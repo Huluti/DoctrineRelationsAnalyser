@@ -72,7 +72,7 @@ return [
 
 To check deletion relations of two entities in a graph:
 
-    php bin/console doctrine-relations-analyser:analyse -o data/ -g --entities="App\\Entity\\User,App\\Entity\\Workspace" -m="deletions"
+    php bin/console doctrine-relations-analyser:analyse -o data/ -g --entities="App\\Entity\\User,App\\Entity\\Workspace" -m deletions
 
 #### Command-line Arguments
 
