@@ -77,9 +77,11 @@ To check deletion relations of two entities in a graph:
 #### Command-line Arguments
 
 - --entities: Optional. Comma-separated list of entities to analyze.
-- --mode: Optional. Permit to choose the analysis mode (all | deletions).
-- --output: Optional. Path for data reporting.
-- --graph: Optional. Generate and save visualization graph.
+- -m, --mode: Optional. Analysis mode: all, deletions [default: "all"]
+- -o, --output: Optional. Output path for reports generated.
+- -g, --graph: Optional. Generate Graphviz graph.
+- -V, --version: Optional. Display help for the given command. When no command is given display help for the list command.
+- -h, --help: Optional. Display this application version.
 
 ## Limitations
 
@@ -88,6 +90,10 @@ To check deletion relations of two entities in a graph:
 ## Contributions
 
 Contributions are welcome! If you have ideas for improvements, new features, or bug fixes, please open an issue or a pull request.
+
+## Interesting readings
+
+- [How to delete… not to delete yourself?](https://accesto.com/blog/how-to-delete-to-not-delete-yourself)
 
 ## Donations
 

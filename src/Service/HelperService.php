@@ -18,4 +18,9 @@ final class HelperService
             default => 'Unknown',
         };
     }
+
+    public static function cleanPath(string $path): string
+    {
+        return rtrim(trim($path), '/');
+    }
 }
