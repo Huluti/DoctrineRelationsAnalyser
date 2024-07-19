@@ -73,6 +73,7 @@ class AnalyseCommand extends Command
                 continue; // Skip entities not in the list
             }
 
+            $relationships[$className] = [];
             foreach ($meta->associationMappings as $fieldName => $association) {
                 $relationDetails = [
                     'field' => $fieldName,
