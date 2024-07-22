@@ -6,6 +6,10 @@ jobs:
   build:
     runs-on: ubuntu-24.04
 
+    strategy:
+      matrix:
+        doctrine-orm-version: [2, 3]
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,6 +32,11 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+      - name: Set Doctrine Version
+        run: |
+          composer require doctrine/orm:${{ matrix.doctrine-orm-version }} --no-update
+          composer update --no-interaction
 
       - name: Coding standards
         run: make check

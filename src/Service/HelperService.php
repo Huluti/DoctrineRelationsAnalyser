@@ -4,17 +4,20 @@ declare(strict_types=1);
 
 namespace DoctrineRelationsAnalyserBundle\Service;
 
-use Doctrine\ORM\Mapping\ClassMetadata;
+use Doctrine\ORM\Mapping\ManyToManyAssociationMapping;
+use Doctrine\ORM\Mapping\ManyToOneAssociationMapping;
+use Doctrine\ORM\Mapping\OneToManyAssociationMapping;
+use Doctrine\ORM\Mapping\OneToOneAssociationMapping;
 
 final class HelperService
 {
-    public static function getRelationType(int $type): string
+    public static function getRelationType(string $type): string
     {
         return match ($type) {
-            ClassMetadata::ONE_TO_ONE => 'OneToOne',
-            ClassMetadata::MANY_TO_ONE => 'ManyToOne',
-            ClassMetadata::ONE_TO_MANY => 'OneToMany',
-            ClassMetadata::MANY_TO_MANY => 'ManyToMany',
+            OneToOneAssociationMapping::class => 'OneToOne',
+            ManyToOneAssociationMapping::class => 'ManyToOne',
+            OneToManyAssociationMapping::class => 'OneToMany',
+            ManyToManyAssociationMapping::class => 'ManyToMany',
             default => 'Unknown',
         };
     }

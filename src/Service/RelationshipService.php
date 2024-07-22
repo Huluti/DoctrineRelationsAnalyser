@@ -38,14 +38,14 @@ class RelationshipService
             foreach ($meta->associationMappings as $fieldName => $association) {
                 $relationDetails = [
                     'field' => $fieldName,
-                    'targetEntity' => $association['targetEntity'],
-                    'type' => $association['type'],
+                    'targetEntity' => $association->targetEntity,
+                    'type' => get_class($association),
                 ];
 
                 if (AnalysisMode::DELETIONS === $mode) {
                     $deletions = [];
 
-                    if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
+                    if (isset($association->orphanRemoval) && $association->orphanRemoval) {
                         $deletions[] = [
                             'type' => DeletionType::ORPHAN_REMOVAL,
                             'level' => Level::ORM,
@@ -53,7 +53,7 @@ class RelationshipService
                         ];
                     }
 
-                    if (isset($association['cascade']) && in_array('remove', $association['cascade'], true)) {
+                    if (isset($association->cascade) && in_array('remove', $association->cascade, true)) {
                         $deletions[] = [
                             'type' => DeletionType::CASCADE,
                             'level' => Level::ORM,
@@ -61,12 +61,12 @@ class RelationshipService
                         ];
                     }
 
-                    if (!empty($association['joinColumns'])) {
-                        if (!empty($association['joinColumns'][0]['onDelete'])) {
+                    if (!empty($association->joinColumns)) {
+                        if (!empty($association->joinColumns[0]->onDelete)) {
                             $deletions[] = [
                                 'type' => DeletionType::ON_DELETE,
                                 'level' => Level::DATABASE,
-                                'value' => $association['joinColumns'][0]['onDelete'],
+                                'value' => $association->joinColumns[0]->onDelete,
                             ];
                         }
                     }

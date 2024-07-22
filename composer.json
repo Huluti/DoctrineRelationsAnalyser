@@ -32,18 +32,20 @@
         "php": ">=8.1",
         "symfony/console": "^6.4|^7.0|^7.1",
         "symfony/http-kernel": "^6.4|^7.0",
-        "doctrine/orm": "^3.0",
+        "doctrine/orm": "^2.0|^3.0",
         "symfony/dependency-injection": "^6.4|^7.0",
         "graphp/graphviz": "^1@dev",
         "graphp/graph": "^1@dev",
         "symfony/filesystem": "^6.4|^7.0",
-        "symfony/framework-bundle": "^6.4|^7.0"
+        "symfony/framework-bundle": "^6.4|^7.0",
+        "doctrine/doctrine-bundle": "^2.12"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.59",
         "phpstan/phpstan": "^1.11",
         "phpunit/phpunit": "^9",
-        "symfony/phpunit-bridge": "^6.4|^7.0"
+        "symfony/phpunit-bridge": "^6.4|^7.0",
+        "symfony/yaml": "^7.1"
     },
     "config": {
     },
