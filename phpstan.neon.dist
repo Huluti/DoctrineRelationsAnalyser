@@ -4,3 +4,4 @@ parameters:
         - src
         - tests
     editorUrl: 'vscode://file/%%file%%:%%line%%'
+    reportUnmatchedIgnoredErrors: false

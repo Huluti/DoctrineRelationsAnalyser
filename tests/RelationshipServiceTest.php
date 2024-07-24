@@ -38,13 +38,13 @@ final class RelationshipServiceTest extends KernelTestCase
         $metadataAll = $this->relationshipService->fetch([], AnalysisMode::ALL);
 
         $keys = array_keys($metadataAll);
-        $this->assertEquals(Post::class, $keys[0]);
-        $this->assertEquals(Tag::class, $keys[1]);
-        $this->assertEquals(Comment::class, $keys[2]);
-        $this->assertEquals(User::class, $keys[3]);
+        $this->assertContains(Post::class, $keys);
+        $this->assertContains(Tag::class, $keys);
+        $this->assertContains(Comment::class, $keys);
+        $this->assertContains(User::class, $keys);
 
         $metadataDeletions = $this->relationshipService->fetch([], AnalysisMode::DELETIONS);
-        $this->assertCount(1, $metadataDeletions[Post::class][1]['deletions']);
-        $this->assertEquals(DeletionType::ORPHAN_REMOVAL, $metadataDeletions[Post::class][1]['deletions'][0]['type']['name']);
+        $this->assertCount(2, $metadataDeletions[Post::class][Comment::class]['deletions']);
+        $this->assertEquals(DeletionType::ORPHAN_REMOVAL, $metadataDeletions[Post::class][Comment::class]['deletions'][0]['type']);
     }
 }

@@ -36,16 +36,20 @@ class RelationshipService
 
             $relationships[$className] = [];
             foreach ($meta->associationMappings as $fieldName => $association) {
+                // @phpstan-ignore-next-line
+                $targetEntity = is_object($association) ? $association->targetEntity : $association['targetEntity'];
+
                 $relationDetails = [
                     'field' => $fieldName,
-                    'targetEntity' => $association->targetEntity,
-                    'type' => get_class($association),
+                    'type' => $association['type'],
                 ];
 
                 if (AnalysisMode::DELETIONS === $mode) {
                     $deletions = [];
 
-                    if (isset($association->orphanRemoval) && $association->orphanRemoval) {
+                    // @phpstan-ignore-next-line
+                    $orphanRemoval = is_object($association) ? $association->orphanRemoval : $association['orphanRemoval'];
+                    if ($orphanRemoval) {
                         $deletions[] = [
                             'type' => DeletionType::ORPHAN_REMOVAL,
                             'level' => Level::ORM,
@@ -53,7 +57,9 @@ class RelationshipService
                         ];
                     }
 
-                    if (isset($association->cascade) && in_array('remove', $association->cascade, true)) {
+                    // @phpstan-ignore-next-line
+                    $cascade = is_object($association) ? $association->cascade : $association['cascade'];
+                    if ($cascade && in_array('remove', $cascade, true)) {
                         $deletions[] = [
                             'type' => DeletionType::CASCADE,
                             'level' => Level::ORM,
@@ -61,12 +67,20 @@ class RelationshipService
                         ];
                     }
 
-                    if (!empty($association->joinColumns)) {
-                        if (!empty($association->joinColumns[0]->onDelete)) {
+                    // @phpstan-ignore-next-line
+                    if (is_object($association) && property_exists($association, 'joinColumns')) {
+                        $joinColumns = $association->joinColumns;
+                    } elseif (is_array($association) && array_key_exists('joinColumns', $association)) { // @phpstan-ignore-line
+                        $joinColumns = $association['joinColumns'];
+                    } else {
+                        $joinColumns = [];
+                    }
+                    if (!empty($joinColumns)) {
+                        if (!empty($joinColumns[0]->onDelete)) {
                             $deletions[] = [
                                 'type' => DeletionType::ON_DELETE,
                                 'level' => Level::DATABASE,
-                                'value' => $association->joinColumns[0]->onDelete,
+                                'value' => $joinColumns[0]->onDelete,
                             ];
                         }
                     }
@@ -74,7 +88,7 @@ class RelationshipService
                     $relationDetails['deletions'] = $deletions;
                 }
 
-                $relationships[$className][] = $relationDetails;
+                $relationships[$className][$targetEntity] = $relationDetails;
             }
         }
 

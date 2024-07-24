@@ -136,9 +136,9 @@ class AnalyseCommand extends Command
     {
         foreach ($relationships as $entity => $relations) {
             $io->section("Entity: $entity");
-            foreach ($relations as $relation) {
+            foreach ($relations as $targetEntity => $relation) {
                 $io->text("Field: {$relation['field']}");
-                $io->text("Target Entity: {$relation['targetEntity']}");
+                $io->text("Target Entity: {$targetEntity}");
                 $io->text('Type: ' . HelperService::getRelationType($relation['type']));
 
                 if (AnalysisMode::DELETIONS === $mode) {
@@ -175,8 +175,7 @@ class AnalyseCommand extends Command
 
         // Create edges for relationships
         foreach ($relationships as $entity => $relations) {
-            foreach ($relations as $relation) {
-                $targetEntity = $relation['targetEntity'];
+            foreach ($relations as $targetEntity => $relation) {
                 if (isset($nodes[$targetEntity])) {
                     if (AnalysisMode::ALL === $mode) {
                         $edge = $graph->createEdgeDirected($nodes[$entity], $nodes[$targetEntity]);
