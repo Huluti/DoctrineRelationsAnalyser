@@ -12,3 +12,6 @@ lint:
 
 test:
 	php ./vendor/bin/simple-phpunit
+
+coverage:
+	php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" ./vendor/bin/simple-phpunit --coverage-text

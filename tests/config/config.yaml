@@ -1,0 +1,16 @@
+framework:
+    secret: "test"
+    test: ~
+
+doctrine:
+    dbal:
+        driver: "pdo_sqlite"
+        path:   "%kernel.cache_dir%/../database.db3"
+
+    orm:
+        controller_resolver:
+            auto_mapping: false
+        mappings:
+            Test:
+                dir: '%kernel.project_dir%/'
+                prefix: 'DoctrineRelationsAnalyserBundle\Tests\Entity'

@@ -16,16 +16,13 @@ Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade 
 > [!WARNING]
 > This project is a work in progress. Contributions and feedback are welcome.
 
-## Compatibility
-
-- Tested with Doctrine ORM 3 and Symfony 7+.
-
 ## Usage
 
 ### Requirements
 
-- Symfony >= 6.4
 - PHP >= 8.1
+- Symfony >= 6.4
+- Doctrine 2|3
 - Graphviz:
     - **For Alpine Linux:** `graphviz fontconfig ttf-freefont`
 
