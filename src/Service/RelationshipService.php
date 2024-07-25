@@ -77,12 +77,12 @@ class RelationshipService
                     }
                     if (!empty($joinColumns)) {
                         // @phpstan-ignore-next-line
-                        $onDelete = is_object($joinColumns[0]) ? $joinColumns[0]->onDelete : $joinColumns[0]['onDelete'];
-                        if (!empty($onDelete)) {
+                        $joinColumn = (object)current($joinColumns);
+                        if (!empty($joinColumn->onDelete)) {
                             $deletions[] = [
                                 'type' => DeletionType::ON_DELETE,
                                 'level' => Level::DATABASE,
-                                'value' => $onDelete,
+                                'value' => $joinColumn->onDelete,
                             ];
                         }
                     }
