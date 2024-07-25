@@ -2,7 +2,7 @@
     "name": "huluti/doctrine-relations-analyser",
     "description": "A Symfony bundle that provides tools for analyzing Doctrine relationships",
     "homepage": "https://github.com/Huluti/DoctrineRelationsAnalyser",
-    "license": "GPL-3.0-or-later",
+    "license": "MIT",
     "keywords": [
         "bundle",
         "symfony",

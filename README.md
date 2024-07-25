@@ -102,4 +102,4 @@ Do you like the tool? Would you like to support its development? Feel free to do
 
 ## License
 
-This project is licensed under the GNU GPL v3 License.
+This project is licensed under the MIT License.
