@@ -11,7 +11,7 @@ Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade 
 > [!NOTE]
 >**Why is it important?**
 >
->Managing cascade operations, especially deletions, is crucial to avoid unintentional data loss. This tool provides a human-readable summary to help >developers review and understand these relationships, ensuring they are intentional and correctly implemented.
+>Managing cascade operations, especially deletions, is crucial to avoid unintentional data loss. This tool provides a human-readable summary to help developers review and understand these relationships, ensuring they are intentional and correctly implemented.
 
 > [!WARNING]
 > This project is a work in progress. Contributions and feedback are welcome.
@@ -23,7 +23,7 @@ Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade 
 - PHP >= 8.1
 - Symfony >= 6.4
 - Doctrine 2|3
-- Graphviz:
+- Graphviz package:
     - **For Alpine Linux:** `graphviz fontconfig ttf-freefont`
 
 ### Installation
