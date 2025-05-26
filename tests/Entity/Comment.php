@@ -17,17 +17,17 @@ class Comment
 
     #[ORM\ManyToOne(targetEntity: Post::class, inversedBy: 'comments')]
     #[ORM\JoinColumn(nullable: false)]
-    private ?Post $post = null;
+    private Post $post;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
     #[ORM\Column]
     private \DateTimeImmutable $publishedAt;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $author = null;
+    private User $author;
 
     public function __construct()
     {
@@ -39,7 +39,7 @@ class Comment
         return $this->id;
     }
 
-    public function getContent(): ?string
+    public function getContent(): string
     {
         return $this->content;
     }
@@ -59,7 +59,7 @@ class Comment
         $this->publishedAt = $publishedAt;
     }
 
-    public function getAuthor(): ?User
+    public function getAuthor(): User
     {
         return $this->author;
     }
@@ -69,7 +69,7 @@ class Comment
         $this->author = $author;
     }
 
-    public function getPost(): ?Post
+    public function getPost(): Post
     {
         return $this->post;
     }

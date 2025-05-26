@@ -18,23 +18,23 @@ class Post
     private ?int $id = null;
 
     #[ORM\Column(type: Types::STRING)]
-    private ?string $title = null;
+    private string $title;
 
     #[ORM\Column(type: Types::STRING)]
-    private ?string $slug = null;
+    private string $slug;
 
     #[ORM\Column(type: Types::STRING)]
-    private ?string $summary = null;
+    private string $summary;
 
     #[ORM\Column(type: Types::TEXT)]
-    private ?string $content = null;
+    private string $content;
 
     #[ORM\Column]
     private \DateTimeImmutable $publishedAt;
 
     #[ORM\ManyToOne(targetEntity: User::class)]
     #[ORM\JoinColumn(nullable: false)]
-    private ?User $author = null;
+    private User $author;
 
     /**
      * @var Collection<int, Comment>
@@ -62,17 +62,17 @@ class Post
         return $this->id;
     }
 
-    public function getTitle(): ?string
+    public function getTitle(): string
     {
         return $this->title;
     }
 
-    public function setTitle(?string $title): void
+    public function setTitle(string $title): void
     {
         $this->title = $title;
     }
 
-    public function getSlug(): ?string
+    public function getSlug(): string
     {
         return $this->slug;
     }
@@ -82,12 +82,12 @@ class Post
         $this->slug = $slug;
     }
 
-    public function getContent(): ?string
+    public function getContent(): string
     {
         return $this->content;
     }
 
-    public function setContent(?string $content): void
+    public function setContent(string $content): void
     {
         $this->content = $content;
     }
@@ -102,7 +102,7 @@ class Post
         $this->publishedAt = $publishedAt;
     }
 
-    public function getAuthor(): ?User
+    public function getAuthor(): User
     {
         return $this->author;
     }
@@ -134,12 +134,12 @@ class Post
         $this->comments->removeElement($comment);
     }
 
-    public function getSummary(): ?string
+    public function getSummary(): string
     {
         return $this->summary;
     }
 
-    public function setSummary(?string $summary): void
+    public function setSummary(string $summary): void
     {
         $this->summary = $summary;
     }

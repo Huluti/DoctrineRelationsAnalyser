@@ -16,16 +16,16 @@ class User
     private ?int $id = null;
 
     #[ORM\Column(type: Types::STRING)]
-    private ?string $fullName = null;
+    private string $fullName;
 
     #[ORM\Column(type: Types::STRING, unique: true)]
-    private ?string $username = null;
+    private string $username;
 
     #[ORM\Column(type: Types::STRING, unique: true)]
-    private ?string $email = null;
+    private string $email;
 
     #[ORM\Column(type: Types::STRING)]
-    private ?string $password = null;
+    private string $password;
 
     public function getId(): ?int
     {
@@ -57,7 +57,7 @@ class User
         $this->username = $username;
     }
 
-    public function getEmail(): ?string
+    public function getEmail(): string
     {
         return $this->email;
     }
@@ -67,7 +67,7 @@ class User
         $this->email = $email;
     }
 
-    public function getPassword(): ?string
+    public function getPassword(): string
     {
         return $this->password;
     }
