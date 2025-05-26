@@ -5,10 +5,10 @@ analyze_ci:
 	php ./vendor/bin/phpstan analyse --error-format github
 
 check:
-	php ./vendor/bin/php-cs-fixer fix --dry-run
+	PHP_CS_FIXER_IGNORE_ENV=1 php ./vendor/bin/php-cs-fixer fix --dry-run
 
 lint:
-	php ./vendor/bin/php-cs-fixer fix
+	PHP_CS_FIXER_IGNORE_ENV=1 php ./vendor/bin/php-cs-fixer fix
 
 test:
 	php ./vendor/bin/simple-phpunit
