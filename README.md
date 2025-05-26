@@ -101,12 +101,12 @@ The configuration file is located at `config/packages/doctrine_relations_analyse
 # config/packages/doctrine_relations_analyser.yaml
 doctrine_relations_analyser:
   entities:
-    DoctrineRelationsAnalyserBundle\Tests\Entity\Post:
+    DoctrineRelationsAnalyserBundle\Tests\Entity\Post:  # to customize with your own entities
       relations:
         comments:
-          class: DoctrineRelationsAnalyserBundle\Tests\Entity\Comment
+          class: DoctrineRelationsAnalyserBundle\Tests\Entity\Comment  # to customize with your own entities
           deletion: true
-          deletion_type: database
+          deletion_type: database  # or 'orm'
 ```
 
 ##### Command-line Arguments
