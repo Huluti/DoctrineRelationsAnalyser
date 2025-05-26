@@ -14,7 +14,9 @@ Doctrine Relations Analyzer is a tool designed to analyze and visualize cascade 
 >Managing cascade operations, especially deletions, is crucial to avoid unintentional data loss. This tool provides a human-readable summary to help developers review and understand these relationships, ensuring they are intentional and correctly implemented.
 
 > [!WARNING]
-> This project is a work in progress. Contributions and feedback are welcome.
+> This project is a work in progress. Contributions and feedback are welcome.  
+> It is currently in an exploratory or "discovery" phase, which means many things are subject to change — including configuration formats, naming conventions, and APIs.  
+> We're very open to suggestions and improvements, and that's why we're keeping the version under `0.x` for now.
 
 ## Usage
 
