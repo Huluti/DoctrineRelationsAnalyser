@@ -46,7 +46,8 @@
         "phpunit/phpunit": "^12",
         "symfony/yaml": "^6.4|^7.0",
         "phpstan/phpstan-doctrine": "^2.0",
-        "phpstan/extension-installer": "^1.4"
+        "phpstan/extension-installer": "^1.4",
+        "phpstan/phpstan-symfony": "^2.0"
     },
     "config": {
         "allow-plugins": {

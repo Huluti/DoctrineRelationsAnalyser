@@ -5,3 +5,7 @@ parameters:
         - tests
     editorUrl: 'vscode://file/%%file%%:%%line%%'
     reportUnmatchedIgnoredErrors: false
+    ignoreErrors:
+        - 
+            message: '#^Call to an undefined method Symfony\\Component\\Config\\Definition\\Builder\\NodeDefinition\:\:children\(\)\.$#'
+            path: src/DoctrineRelationsAnalyserBundle.php

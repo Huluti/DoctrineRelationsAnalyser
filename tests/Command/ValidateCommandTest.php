@@ -19,6 +19,7 @@ class ValidateCommandTest extends KernelTestCase
     public function testExecute(): void
     {
         self::bootKernel();
+        // @phpstan-ignore-next-line
         $application = new Application(self::$kernel);
 
         $command = $application->find('doctrine-relations-analyser:validate');
