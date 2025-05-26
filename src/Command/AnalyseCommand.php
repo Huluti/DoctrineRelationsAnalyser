@@ -24,7 +24,7 @@ use ValueError;
 
 #[AsCommand(
     name: 'doctrine-relations-analyser:analyse',
-    description: 'Command to visualise easily the relationships between entities',
+    description: 'Command to easily visualise the relationships between Doctrine entities.',
 )]
 class AnalyseCommand extends Command
 {
@@ -52,7 +52,7 @@ class AnalyseCommand extends Command
 
         $io = new SymfonyStyle($input, $output);
 
-        $io->title('Doctrine Relations Analyzer');
+        $io->title('Doctrine Relations Analyzer - Analysis');
 
         // Validate options
         try {

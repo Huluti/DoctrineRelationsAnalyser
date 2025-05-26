@@ -14,3 +14,12 @@ doctrine:
             Test:
                 dir: '%kernel.project_dir%/'
                 prefix: 'DoctrineRelationsAnalyserBundle\Tests\Entity'
+
+doctrine_relations_analyser:
+  entities:
+    DoctrineRelationsAnalyserBundle\Tests\Entity\Post:
+      relations:
+        comments:
+          class: DoctrineRelationsAnalyserBundle\Tests\Entity\Comment
+          deletion: true
+          deletion_type: database

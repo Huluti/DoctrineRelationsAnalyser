@@ -63,7 +63,21 @@ return [
 
 ### Usage
 
+#### Analysis
+
+Command to easily visualise the relationships between Doctrine entities
+
     php bin/console doctrine-relations-analyser:analyse
+
+##### Command-line Arguments
+
+- --entities: Optional. Comma-separated list of entities to analyze
+- -m, --mode: Optional. Analysis mode (all, deletions) [default: "all"]
+- -o, --output: Optional. Output path for reports generated
+- -g, --graph: Optional. Generate Graphviz graph
+- --graph-format: Optional. Graph image format (png, svg) [default: "png"]
+- -V, --version: Optional. Display help for the given command. When no command is given display help for the list command
+- -h, --help: Optional. Display this application version
 
 #### Examples
 
@@ -71,13 +85,30 @@ To check deletion relations of two entities in a graph:
 
     php bin/console doctrine-relations-analyser:analyse -o data/ -g --entities="App\\Entity\\User,App\\Entity\\Workspace" -m deletions
 
-#### Command-line Arguments
+#### Validation
 
-- --entities: Optional. Comma-separated list of entities to analyze
-- -m, --mode: Optional. Analysis mode (all, deletions) [default: "all"]
-- -o, --output: Optional. Output path for reports generated
-- -g, --graph: Optional. Generate Graphviz graph
-- --graph-format: Optional. Graph image format (png, svg) [default: "png"]
+Command to validate Doctrine relationships between entities against configuration file of bundle. It can be integrated into CI/CD pipelines to ensure that the expected relationships are maintained.
+
+    php bin/console doctrine-relations-analyser:validate
+
+##### Configuration file
+
+The configuration file is located at `config/packages/doctrine_relations_analyser.yaml`. It allows you to define the expected relationships between entities, including which entities should be deleted when a parent entity is deleted.
+
+```yaml
+# config/packages/doctrine_relations_analyser.yaml
+doctrine_relations_analyser:
+  entities:
+    DoctrineRelationsAnalyserBundle\Tests\Entity\Post:
+      relations:
+        comments:
+          class: DoctrineRelationsAnalyserBundle\Tests\Entity\Comment
+          deletion: true
+          deletion_type: database
+```
+
+##### Command-line Arguments
+
 - -V, --version: Optional. Display help for the given command. When no command is given display help for the list command
 - -h, --help: Optional. Display this application version
 
