@@ -141,7 +141,7 @@ class AnalyseCommand extends Command
                 $io->text("Target Entity: {$targetEntity}");
                 $io->text('Type: ' . HelperService::getRelationType($relation['type']));
 
-                if (AnalysisMode::DELETIONS === $mode) {
+                if (in_array($mode, [AnalysisMode::ALL, AnalysisMode::DELETIONS], true)) {
                     if (!empty($relation['deletions'])) {
                         $io->text('Deletions properties:');
 
