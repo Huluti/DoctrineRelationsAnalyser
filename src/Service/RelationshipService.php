@@ -41,7 +41,7 @@ class RelationshipService
                     'type' => $association['type'],
                 ];
 
-                if (AnalysisMode::DELETIONS === $mode) {
+                if (in_array($mode, [AnalysisMode::DELETIONS, AnalysisMode::ALL], true)) {
                     $deletions = [];
 
                     if (isset($association['orphanRemoval']) && $association['orphanRemoval']) {
