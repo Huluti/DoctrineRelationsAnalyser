@@ -1,37 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/9.6/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
-         cacheResultFile=".phpunit.cache/test-results"
-         executionOrder="depends,defects"
-         forceCoversAnnotation="true"
-         beStrictAboutCoversAnnotation="true"
-         beStrictAboutOutputDuringTests="true"
-         beStrictAboutTodoAnnotatedTests="true"
-         convertDeprecationsToExceptions="true"
-         failOnRisky="true"
-         failOnWarning="true"
-         verbose="true">
 
+<!-- https://docs.phpunit.de/en/12.1/configuration.html -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         failOnDeprecation="true"
+         failOnNotice="true"
+         failOnWarning="true"
+         colors="true"
+>
     <php>
-        <ini name="display_errors" value="1" />
-        <ini name="error_reporting" value="-1" />
-        <server name="APP_ENV" value="test" force="true" />
-        <server name="APP_DEBUG" value="true" force="true" />
-        <server name="SHELL_VERBOSITY" value="-1" />
+        <ini name="display_errors" value="1"/>
+        <ini name="error_reporting" value="-1"/>
+        <server name="APP_ENV" value="test" force="true"/>
+        <server name="SHELL_VERBOSITY" value="-1"/>
         <server name="KERNEL_CLASS" value="DoctrineRelationsAnalyserBundle\Tests\AppKernel" />
     </php>
-         
+
     <testsuites>
-        <testsuite name="default">
+        <testsuite name="Project Test Suite">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
 
-    <coverage cacheDirectory=".phpunit.cache/code-coverage"
-              processUncoveredFiles="true">
+    <source ignoreSuppressionOfDeprecations="true"
+            ignoreIndirectDeprecations="true"
+    >
         <include>
             <directory suffix=".php">src</directory>
         </include>
-    </coverage>
+
+        <deprecationTrigger>
+            <function>trigger_deprecation</function>
+            <method>Doctrine\Deprecations\Deprecation::trigger</method>
+            <method>Doctrine\Deprecations\Deprecation::delegateTriggerToBackend</method>
+        </deprecationTrigger>
+    </source>
+
+    <extensions>
+        <!-- Run `composer require symfony/panther` before enabling this extension -->
+        <!-- <bootstrap class="Symfony\Component\Panther\ServerExtension" /> -->
+    </extensions>
 </phpunit>

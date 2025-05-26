@@ -11,7 +11,7 @@ lint:
 	PHP_CS_FIXER_IGNORE_ENV=1 php ./vendor/bin/php-cs-fixer fix
 
 test:
-	php ./vendor/bin/simple-phpunit
+	php ./vendor/bin/phpunit
 
 coverage:
-	php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" ./vendor/bin/simple-phpunit --coverage-text
+	php -dpcov.enabled=1 -dpcov.directory=. -dpcov.exclude="~vendor~" ./vendor/bin/phpunit --coverage-text

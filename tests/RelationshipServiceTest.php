@@ -23,6 +23,12 @@ final class RelationshipServiceTest extends KernelTestCase
 
     private RelationshipService $relationshipService;
 
+    protected function tearDown(): void
+    {
+        restore_exception_handler();
+        parent::tearDown();
+    }
+
     protected function setUp(): void
     {
         $kernel = self::bootKernel();
