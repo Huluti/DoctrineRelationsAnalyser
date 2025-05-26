@@ -30,7 +30,7 @@ class AnalyseCommand extends Command
 {
     public function __construct(
         private readonly RelationshipService $relationshipService,
-        private readonly Filesystem $filesystem
+        private readonly Filesystem $filesystem,
     ) {
         parent::__construct();
     }
