@@ -35,8 +35,9 @@ class ValidateCommand extends Command
         $io->title('Doctrine Relations Analyzer - Validation');
 
         $config = $this->params->get('doctrine_relations_analyser.entities');
-        if ($config === null || !is_array($config)) {
+        if (null === $config || !is_array($config)) {
             $io->error('Configuration for entities is not set or invalid.');
+
             return Command::FAILURE;
         }
         $entities = array_keys($config);
