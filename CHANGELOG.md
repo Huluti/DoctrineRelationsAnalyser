@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Support for Doctrine Bundle 3
+- Remove support for Doctrine ORM 2
 
 ## Changed
 - Update dependencies to latest versions
