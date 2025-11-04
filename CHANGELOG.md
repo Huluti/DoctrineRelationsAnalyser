@@ -11,9 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for Doctrine Bundle 3
 - Remove support for Doctrine ORM 2
 
-## Changed
-- Update dependencies to latest versions
-
 ## [0.6.0] - 2025-05-26
 
 ### Added
