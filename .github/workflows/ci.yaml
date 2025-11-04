@@ -14,7 +14,6 @@ jobs:
       fail-fast: false
       matrix:
         php-version: ["8.1", "8.2", "8.3", "8.4"]
-        doctrine-orm-version: ["2.0", "3.0"]
 
     steps:
       - name: Checkout code
@@ -38,9 +37,6 @@ jobs:
 
       - name: Install Composer dependencies
         run: composer install --no-interaction --prefer-dist --optimize-autoloader
-
-      - name: Set Doctrine Version
-        run: composer require doctrine/orm:"^${{ matrix.doctrine-orm-version }}" -W
 
       - name: Coding standards
         run: make check
