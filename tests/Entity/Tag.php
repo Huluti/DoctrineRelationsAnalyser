@@ -8,7 +8,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-class Tag
+class Tag implements \Stringable
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
